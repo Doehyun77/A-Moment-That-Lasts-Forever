@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영원의 순간 — A Moment That Lasts Forever</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script> <!-- QR Code Generator -->
+</head>
+<body>
+
+
+<!-- ── QR 발급 화면 ── -->
+<div id="screen-qr" class="screen active">
+  <div style="min-height:100vh; background:var(--ivory); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px;">
+    <div style="font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:300; color:var(--deep-rose); margin-bottom:4px;">추억을 담을 순간 발급</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:32px; letter-spacing:0.5px;">신랑신부 이름을 입력하면 QR이 생성돼요</div>
+
+    <div style="width:100%; max-width:340px;">
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <div style="flex:1;">
+          <div style="font-size:11px; color:var(--text-muted); letter-spacing:1px; margin-bottom:6px;">신랑 이름</div>
+          <input type="text" id="qr-groom" class="form-input" placeholder="신랑 이름" maxlength="5" oninput="clearQR()" style="margin-bottom:0;">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px; color:var(--text-muted); letter-spacing:1px; margin-bottom:6px;">신부 이름</div>
+          <input type="text" id="qr-bride" class="form-input" placeholder="신부 이름" maxlength="5" oninput="clearQR()" style="margin-bottom:0;">
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="generateQRCode()" style="margin-bottom:12px;">QR 생성하기</button>
+
+      <div id="qr-output" style="display:none; text-align:center; margin:20px 0;">
+        <div style="background:var(--white); border:1px solid var(--border); border-radius:16px; padding:24px; display:inline-block;">
+          <div id="qr-canvas"></div>
+          <div id="qr-names" style="font-family:'Cormorant Garamond',serif; font-size:16px; color:var(--deep-rose); margin-top:12px;"></div>
+        </div>
+        <button onclick="downloadQR()" style="margin-top:16px; width:100%; padding:12px; border:1px solid var(--rose); border-radius:8px; background:transparent; color:var(--rose); font-family:'Noto Sans KR',sans-serif; font-size:13px; cursor:pointer;">📥 QR 이미지 저장</button>
+      </div>
+    </div>
+
+    <!-- 임시 입장 버튼 -->
+    <button onclick="goToEntry()" style="position:fixed; bottom:24px; left:24px; padding:10px 16px; background:var(--cream); border:1px dashed var(--rose); border-radius:20px; font-family:'Noto Sans KR',sans-serif; font-size:12px; color:var(--rose); cursor:pointer;">
+      🚪 임시 입장
+    </button>
+
+    <button onclick="openAdminModal()" style="position:fixed; bottom:24px; right:24px; padding:10px 16px; background:transparent; border:none; font-family:'Noto Sans KR',sans-serif; font-size:12px; color:var(--text-muted); cursor:pointer;">관리자로 입장</button>
+  </div>
+</div>
+
+<!-- ── LANDING (입장 화면) ── -->
+<div id="screen-landing" class="screen">
+  <div class="landing-inner">
+    <div style="margin-bottom: 20px;">
+      <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:6px;">
+        <div style="text-align:center;">
+          <div style="font-size:11px; color:var(--text-muted); letter-spacing:2px; margin-bottom:4px;">신랑</div>
+          <div id="groom-name" style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--gold);">권영준</div>
+        </div>
+        <div style="font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--blush); font-weight:300; padding-bottom:2px;">♥</div>
+        <div style="text-align:center;">
+          <div style="font-size:11px; color:var(--text-muted); letter-spacing:2px; margin-bottom:4px;">신부</div>
+          <div id="bride-name" style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--gold);">이수아</div>
+        </div>
+      </div>
+    </div>
+    <div class="landing-ornament">✦ W E D D I N G ✦</div>
+    <div class="landing-title">영원의<br><em>순간</em></div>
+    <div class="landing-subtitle">
+      QR 코드를 스캔하여 입장하셨습니다<br>
+      소중한 순간을 함께 기록해 주세요
+    </div>
+
+    <div style="font-size:72px; margin: 24px 0;">💌</div>
+
+    <div class="nickname-form">
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <input type="text" class="form-input" id="nickname-input" placeholder="이름 입력 (최대 5글자)" maxlength="5" style="margin-bottom:0; flex:1; min-width:0; color:var(--text);" oninput="this.style.color='var(--text)'">
+        <select id="category-select" class="form-input" onchange="handleCategoryChange()" style="margin-bottom:0; width:120px; flex-shrink:0; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path d=%22M1 1l5 5 5-5%22 stroke=%22%23A08070%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22/></svg>'); background-repeat:no-repeat; background-position:right 10px center; padding-right:28px;">
+          <option value="">관계 선택</option>
+          <option value="직장동료">직장동료</option>
+          <option value="가족">가족</option>
+          <option value="초등친구">초등친구</option>
+          <option value="중등친구">중등친구</option>
+          <option value="고등친구">고등친구</option>
+          <option value="대학동기">대학동기</option>
+          <option value="군대동기">군대동기</option>
+          <option value="직접입력">직접입력</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button id="toggle-groom" onclick="selectSide('신랑')" style="flex:1; padding:10px; border:1px solid var(--border); border-radius:8px; background:transparent; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--text-muted); cursor:pointer; transition:all 0.2s;">신랑측</button>
+        <button id="toggle-bride" onclick="selectSide('신부')" style="flex:1; padding:10px; border:1px solid var(--border); border-radius:8px; background:transparent; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--text-muted); cursor:pointer; transition:all 0.2s;">신부측</button>
+      </div>
+      <div id="custom-category-wrap" style="display:none; margin-bottom:12px;">
+        <input type="text" class="form-input" id="custom-category-input" placeholder="관계를 직접 입력하세요 (예: 동호회 친구)" maxlength="15" style="margin-bottom:0;">
+      </div>
+      <button class="btn-primary" onclick="enterEvent()">입장하기</button>
+      <button onclick="openAdminModal()" style="width:100%; margin-top:10px; padding:11px; background:transparent; border:none; font-family:'Noto Sans KR',sans-serif; font-size:12px; color:var(--text-muted); cursor:pointer; letter-spacing:0.5px;">관리자로 입장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN LOGIN MODAL ── -->
+<div id="admin-login-modal" style="display:none; position:fixed; inset:0; background:rgba(44,31,26,0.45); z-index:300; align-items:center; justify-content:center;">
+  <div style="background:var(--white); border-radius:16px; padding:28px 24px; width:calc(100% - 48px); max-width:320px; text-align:center;">
+    <div style="font-size:26px; margin-bottom:10px;">🔐</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--deep-rose); margin-bottom:6px;">관리자 입장</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">관리자 코드를 입력해 주세요</div>
+    <input type="password" id="admin-code-input" class="form-input" placeholder="코드 입력" maxlength="20"
+      onkeydown="if(event.key==='Enter') submitAdminCode()"
+      style="text-align:center; letter-spacing:4px; font-size:16px; --ph:1;">
+    
+    <div id="admin-code-error" style="font-size:12px; color:var(--rose); margin-top:-8px; margin-bottom:12px; min-height:18px;"></div>
+    <div style="display:flex; gap:8px;">
+      <button onclick="closeAdminModal()" style="flex:1; padding:11px; border:1px solid var(--border); border-radius:8px; background:transparent; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--text-soft); cursor:pointer;">취소</button>
+      <button onclick="submitAdminCode()" style="flex:1; padding:11px; border:none; border-radius:8px; background:var(--deep-rose); font-family:'Noto Sans KR',sans-serif; font-size:13px; color:white; cursor:pointer; font-weight:500;">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SHARED NAV (upload + gallery) ── -->
+<nav class="top-nav" id="main-nav" style="display:none; position:sticky; top:0; z-index:100;">
+  <button class="btn-back" id="main-back-btn" onclick="goBack('current')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    뒤로
+  </button>
+  <div class="nav-logo">
+    <span class="nav-couple">권영준 ♥ 이수아</span>
+    <span>A Moment</span> That Lasts
+  </div>
+  <div class="nav-pill">
+    <button id="nav-upload-btn" onclick="showScreen('upload')">업로드</button>
+    <button id="nav-gallery-btn" onclick="showScreen('gallery')">갤러리</button>
+  </div>
+</nav>
+
+<!-- ── SLIDE WRAPPER ── -->
+<div id="slide-wrapper" style="display:none; overflow-x:hidden; overflow-y:auto; position:relative; min-height:calc(100vh - 60px);">
+
+<!-- ── UPLOAD BODY ── -->
+<div id="screen-upload" class="screen-body" style="display:none; min-height:100%;">
+  <div class="upload-body">
+    <div class="section-heading">사진 & 메시지</div>
+    <div class="section-sub" id="upload-greeting">아름다운 순간을 남겨주세요</div>
+
+    <div class="photo-drop" onclick="triggerFileInput()">
+      <div class="photo-drop-icon">📷</div>
+      <div class="photo-drop-text">
+        사진을 여기에 드래그하거나<br>
+        <strong>클릭하여 업로드</strong>하세요<br>
+        <span style="font-size:11px; color: var(--text-muted);">JPG, PNG, HEIC · 최대 10MB · 최대 5장</span>
+      </div>
+      <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="previewFiles(event)">
+    </div>
+
+    <div class="photo-preview-strip" id="preview-strip">
+      <div class="photo-thumb-placeholder">아직<br>사진 없음</div>
+    </div>
+
+    <textarea class="message-input" id="message-input" placeholder="신랑신부에게 전하고 싶은 말을 적어주세요 💌" maxlength="200" oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="char-count">0</span> / 200</div>
+
+    <div class="upload-footer">
+      <button class="btn-primary" style="width:100%" onclick="openPinSetModal()">공유하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── GALLERY BODY ── -->
+<div id="screen-gallery" class="screen-body" style="display:none; min-height:100%;">
+  <div class="gallery-body">
+    <div class="gallery-header">
+      <div class="gallery-count" id="gallery-count">총 0개의 순간</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button onclick="openAdminModal()" style="border:1px dashed var(--gold); background:transparent; border-radius:12px; padding:4px 10px; font-size:11px; color:var(--gold); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;" onmouseover="this.style.background='rgba(201,169,110,0.1)'" onmouseout="this.style.background='transparent'">⚙ 관리자</button>
+        <div style="display:flex; background:var(--cream); border-radius:12px; padding:3px;">
+          <button id="filter-all" onclick="setFilter('all')" style="border:none; background:var(--white); border-radius:9px; padding:4px 10px; font-size:11px; color:var(--deep-rose); cursor:pointer; font-family:'Noto Sans KR',sans-serif; box-shadow:0 1px 3px var(--shadow); transition:all 0.2s;">전체</button>
+          <button id="filter-groom" onclick="setFilter('신랑')" style="border:none; background:transparent; border-radius:9px; padding:4px 10px; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;">신랑측</button>
+          <button id="filter-bride" onclick="setFilter('신부')" style="border:none; background:transparent; border-radius:9px; padding:4px 10px; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;">신부측</button>
+        </div>
+        <div style="display:flex; background:var(--cream); border-radius:12px; padding:3px;">
+          <button id="sort-recent" onclick="setSort('recent')" style="border:none; background:var(--white); border-radius:9px; padding:4px 10px; font-size:11px; color:var(--deep-rose); cursor:pointer; font-family:'Noto Sans KR',sans-serif; box-shadow:0 1px 3px var(--shadow); transition:all 0.2s;">최신순</button>
+          <button id="sort-popular" onclick="setSort('popular')" style="border:none; background:transparent; border-radius:9px; padding:4px 10px; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;">인기순</button>
+        </div>
+        <button onclick="renderTimeline()" style="display:flex; align-items:center; gap:5px; border:1px solid var(--border); background:transparent; border-radius:12px; padding:4px 10px; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--rose)'; this.style.color='var(--rose)'" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-muted)'">↻ 새로고침</button>
+      </div>
+    </div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+</div>
+
+</div><!-- end slide-wrapper -->
+
+<!-- ── ADMIN ── -->
+<div id="screen-admin" class="screen">
+  <nav class="top-nav">
+    <div class="nav-logo" style="color:var(--dark-gold); font-size:clamp(13px, 3.5vw, 18px);">관리자 페이지</div>
+    <button onclick="adminLogout()" style="padding:6px 12px; font-size:11px; background:transparent; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans KR',sans-serif; color:var(--text-soft); cursor:pointer; white-space:nowrap;">로그아웃</button>
+  </nav>
+  <div class="admin-body">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">총 사진</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">참여 하객</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">메시지</div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <div class="admin-section-title" style="margin-bottom:0;">최근 업로드 관리</div>
+      <div style="display:flex; background:var(--cream); border-radius:12px; padding:3px;">
+        <button id="admin-filter-all" onclick="setAdminFilter('all')" style="border:none; background:var(--white); border-radius:9px; padding:4px 10px; font-size:11px; color:var(--deep-rose); cursor:pointer; font-family:'Noto Sans KR',sans-serif; box-shadow:0 1px 3px var(--shadow); transition:all 0.2s;">전체</button>
+        <button id="admin-filter-groom" onclick="setAdminFilter('신랑')" style="border:none; background:transparent; border-radius:9px; padding:4px 10px; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;">신랑측</button>
+        <button id="admin-filter-bride" onclick="setAdminFilter('신부')" style="border:none; background:transparent; border-radius:9px; padding:4px 10px; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;">신부측</button>
+      </div>
+    </div>
+    <div class="admin-grid" id="admin-grid">
+      <div id="admin-empty" style="grid-column:1/-1; text-align:center; padding:40px 20px; color:var(--text-muted);">
+        <div style="font-size:28px; margin-bottom:8px; opacity:0.4;">📂</div>
+        <div style="font-size:13px;">아직 업로드된 게시물이 없어요</div>
+      </div>
+    </div>
+
+    <div class="admin-actions-row">
+      <button class="btn-outline-rose" onclick="downloadAll()">📥 전체 다운로드</button>
+      <button class="btn-outline-rose" onclick="showToast('슬라이드쇼 링크가 복사되었습니다')">🔗 슬라이드쇼</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PHOTO VIEWER MODAL ── -->
+<div id="photo-viewer-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:400; align-items:center; justify-content:center;" onclick="closePhotoViewer()">
+  <button onclick="closePhotoViewer()" style="position:absolute; top:16px; right:16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.15); border:none; color:white; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:401;">✕</button>
+  <img id="photo-viewer-img" src="" style="max-width:92vw; max-height:88vh; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── PIN SET MODAL ── -->
+<div id="pin-set-modal" style="display:none; position:fixed; inset:0; background:rgba(44,31,26,0.45); z-index:300; align-items:center; justify-content:center;">
+  <div style="background:var(--white); border-radius:16px; padding:28px 24px; width:calc(100% - 48px); max-width:320px; text-align:center;">
+    <div style="font-size:28px; margin-bottom:12px;">🔒</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--deep-rose); margin-bottom:8px;">삭제 번호 설정</div>
+    <div style="font-size:13px; color:var(--text-muted); line-height:1.7; margin-bottom:16px;">게시물 삭제 시 사용할<br>숫자 4자리를 설정해주세요</div>
+    <div style="display:flex; justify-content:center; gap:12px; margin-bottom:16px; cursor:text;" id="pin-dots" onclick="document.getElementById('delete-pin-input').focus()">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+    <input type="number" id="delete-pin-input" maxlength="4" min="0" max="9999"
+      oninput="if(this.value.length>4) this.value=this.value.slice(0,4); updatePinDots(); document.getElementById('pin-set-error').textContent='';"
+      onkeydown="if(event.key==='Enter') submitUpload()"
+      style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
+    <div id="pin-set-error" style="font-size:12px; color:var(--rose); margin-bottom:12px; min-height:18px; text-align:center;"></div>
+    <div style="display:flex; gap:8px;">
+      <button onclick="closePinSetModal()" style="flex:1; padding:11px; border:1px solid var(--border); border-radius:8px; background:transparent; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--text-soft); cursor:pointer;">취소</button>
+      <button onclick="submitUpload()" style="flex:1; padding:11px; border:none; border-radius:8px; background:var(--deep-rose); font-family:'Noto Sans KR',sans-serif; font-size:13px; color:white; cursor:pointer; font-weight:500;">공유하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE MODAL ── -->
+<div id="delete-modal" style="display:none; position:fixed; inset:0; background:rgba(44,31,26,0.45); z-index:300; align-items:center; justify-content:center;">
+  <div style="background:var(--white); border-radius:16px; padding:28px 24px; width:calc(100% - 48px); max-width:320px; text-align:center;">
+    <div style="font-size:28px; margin-bottom:12px;">🔑</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--deep-rose); margin-bottom:8px;">삭제 번호 확인</div>
+    <div style="font-size:13px; color:var(--text-muted); line-height:1.7; margin-bottom:16px;">게시물 등록 시 설정한<br>4자리 번호를 입력해주세요</div>
+    <div style="display:flex; justify-content:center; gap:12px; margin-bottom:16px; cursor:text;" id="confirm-pin-dots" onclick="document.getElementById('delete-pin-confirm').focus()">
+      <div class="pin-dot" id="cdot-0"></div>
+      <div class="pin-dot" id="cdot-1"></div>
+      <div class="pin-dot" id="cdot-2"></div>
+      <div class="pin-dot" id="cdot-3"></div>
+    </div>
+    <input type="number" id="delete-pin-confirm" min="0" max="9999"
+      oninput="if(this.value.length>4) this.value=this.value.slice(0,4); updateConfirmDots(); document.getElementById('delete-pin-error').textContent='';"
+      onkeydown="if(event.key==='Enter') deletePost()"
+      style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
+    <div id="delete-pin-error" style="font-size:12px; color:var(--rose); margin-bottom:12px; min-height:18px; text-align:center;"></div>
+    <div style="display:flex; gap:8px;">
+      <button onclick="closeDeleteModal()" style="flex:1; padding:11px; border:1px solid var(--border); border-radius:8px; background:transparent; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--text-soft); cursor:pointer;">취소</button>
+      <button onclick="deletePost()" style="flex:1; padding:11px; border:none; border-radius:8px; background:var(--deep-rose); font-family:'Noto Sans KR',sans-serif; font-size:13px; color:white; cursor:pointer; font-weight:500;">삭제하기</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── SCRIPTS ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/state.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/gallery.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/qr.js"></script>
+</body>
+</html>
+
