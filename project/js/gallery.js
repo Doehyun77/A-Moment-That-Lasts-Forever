@@ -59,6 +59,7 @@ function renderTimeline() {
   document.getElementById('gallery-count').textContent = `총 ${sorted.length}개의 순간`;
 
   sorted.forEach((p, i) => {
+    const postId    = p.id;
     const realIndex = samplePosts.indexOf(p);
     const isOwn     = currentNickname && p.name === currentNickname;
     const item      = document.createElement('div');
@@ -90,10 +91,10 @@ function renderTimeline() {
         </div>
         <div class="timeline-msg">${p.msg}</div>
         <div class="timeline-actions">
-          <button class="action-btn" id="like-btn-${realIndex}" onclick="toggleLike(${realIndex})" style="display:flex;align-items:center;gap:4px;">
-            <span id="like-heart-${realIndex}" style="font-size:15px;">${p.liked ? '♥' : '♡'}</span>
+          <button class="action-btn" id="like-btn-${postId}" onclick="toggleLike('${postId}')" style="display:flex;align-items:center;gap:4px;">
+            <span id="like-heart-${postId}" style="font-size:15px;">${p.liked ? '♥' : '♡'}</span>
             <span style="color:${p.liked ? '#C9A96E' : 'var(--text-muted)'};">좋아요</span>
-            <span id="like-count-${realIndex}" style="display:${p.likes > 0 ? 'inline' : 'none'};color:#C9A96E;font-size:11px;font-weight:500;">${p.likes}</span>
+            <span id="like-count-${postId}" style="display:${p.likes > 0 ? 'inline' : 'none'};color:#C9A96E;font-size:11px;font-weight:500;">${p.likes}</span>
           </button>
           ${isOwn
             ? `<button class="action-btn" onclick="confirmDelete(${realIndex})" style="color:var(--rose);margin-left:auto;">🗑 삭제</button>`
@@ -104,13 +105,15 @@ function renderTimeline() {
   });
 }
 
-function toggleLike(index) {
-  const p    = samplePosts[index];
+function toggleLike(postId) {
+  const p = samplePosts.find(p => String(p.id) === String(postId));
+  if (!p) return;
   p.liked    = !p.liked;
   p.likes    = p.liked ? p.likes + 1 : p.likes - 1;
-  const heart   = document.getElementById('like-heart-'  + index);
-  const countEl = document.getElementById('like-count-'  + index);
-  const btn     = document.getElementById('like-btn-'    + index);
+  const heart   = document.getElementById('like-heart-'  + postId);
+  const countEl = document.getElementById('like-count-'  + postId);
+  const btn     = document.getElementById('like-btn-'    + postId);
+  if (!heart || !countEl || !btn) return;
   heart.textContent  = p.liked ? '♥' : '♡';
   heart.style.color  = p.liked ? '#C9A96E' : '';
   btn.querySelector('span:nth-child(2)').style.color = p.liked ? '#C9A96E' : 'var(--text-muted)';

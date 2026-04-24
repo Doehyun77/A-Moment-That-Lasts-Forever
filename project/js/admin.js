@@ -149,6 +149,10 @@ function closeDeleteModal() {
 async function deletePost() {
   if (deleteTargetIndex === null) return;
   const entered = document.getElementById('delete-pin-confirm').value.trim();
+  if (entered.length !== 4 || !/^\d{4}$/.test(entered)) {
+    document.getElementById('delete-pin-error').textContent = '숫자 4자리를 입력해주세요';
+    return;
+  }
   const post    = samplePosts[deleteTargetIndex];
   const res     = await api_deletePost(post.id, entered);
   if (!res.success) {

@@ -257,8 +257,8 @@
       <div class="pin-dot" id="dot-2"></div>
       <div class="pin-dot" id="dot-3"></div>
     </div>
-    <input type="number" id="delete-pin-input" maxlength="4" min="0" max="9999"
-      oninput="if(this.value.length>4) this.value=this.value.slice(0,4); updatePinDots(); document.getElementById('pin-set-error').textContent='';"
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="delete-pin-input" maxlength="4"
+      oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length>4) this.value=this.value.slice(0,4); updatePinDots(); document.getElementById('pin-set-error').textContent='';"
       onkeydown="if(event.key==='Enter') submitUpload()"
       style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
     <div id="pin-set-error" style="font-size:12px; color:var(--rose); margin-bottom:12px; min-height:18px; text-align:center;"></div>
@@ -281,8 +281,8 @@
       <div class="pin-dot" id="cdot-2"></div>
       <div class="pin-dot" id="cdot-3"></div>
     </div>
-    <input type="number" id="delete-pin-confirm" min="0" max="9999"
-      oninput="if(this.value.length>4) this.value=this.value.slice(0,4); updateConfirmDots(); document.getElementById('delete-pin-error').textContent='';"
+    <input type="text" inputmode="numeric" pattern="[0-9]*" id="delete-pin-confirm" maxlength="4"
+      oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length>4) this.value=this.value.slice(0,4); updateConfirmDots(); document.getElementById('delete-pin-error').textContent='';"
       onkeydown="if(event.key==='Enter') deletePost()"
       style="position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;">
     <div id="delete-pin-error" style="font-size:12px; color:var(--rose); margin-bottom:12px; min-height:18px; text-align:center;"></div>

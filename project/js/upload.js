@@ -37,14 +37,16 @@ function renderPreviewStrip() {
   pendingPhotos.forEach((src, idx) => {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:relative; display:inline-block;';
+    wrap.dataset.idx = idx;
     const img  = document.createElement('img');
     img.className = 'photo-thumb';
     img.src = src;
     const del  = document.createElement('button');
     del.textContent = '✕';
     del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--deep-rose);color:white;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1;';
-    del.onclick = () => {
-      pendingPhotos.splice(idx, 1);
+    del.onclick = (e) => {
+      const currentIdx = parseInt(e.currentTarget.closest('[data-idx]').dataset.idx);
+      pendingPhotos.splice(currentIdx, 1);
       renderPreviewStrip();
     };
     wrap.appendChild(img);
@@ -90,7 +92,7 @@ function closePinSetModal() {
 
 function submitUpload() {
   const pin = document.getElementById('delete-pin-input').value.trim();
-  if (!pin || pin.length !== 4) {
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
     document.getElementById('pin-set-error').textContent = '숫자 4자리를 입력해주세요';
     return;
   }

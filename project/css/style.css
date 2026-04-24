@@ -251,6 +251,9 @@
     align-items: center; justify-content: center; gap: 8px;
   }
   .admin-thumb-wrap:hover .admin-thumb-actions { display: flex; }
+  @media (hover: none) {
+    .admin-thumb-actions { display: flex; background: rgba(139, 74, 56, 0.5); }
+  }
   .admin-icon-btn {
     width: 30px; height: 30px; border-radius: 6px;
     background: rgba(255,255,255,0.9); border: none; cursor: pointer;
