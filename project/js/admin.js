@@ -71,10 +71,12 @@ function renderAdminGrid() {
 
   // 통계는 항상 전체 기준
   const totalPhotos = samplePosts.flatMap(p => p.photos || []).length;
-  document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = totalPhotos;
-  document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = new Set(samplePosts.map(p => p.name)).size;
-  document.querySelector('.stat-card:nth-child(3) .stat-value').textContent =
-    samplePosts.filter(p => p.msg && p.msg !== '(사진만 공유)').length;
+  const statCard1 = document.querySelector('.stat-card:nth-child(1) .stat-value');
+  const statCard2 = document.querySelector('.stat-card:nth-child(2) .stat-value');
+  const statCard3 = document.querySelector('.stat-card:nth-child(3) .stat-value');
+  if (statCard1) statCard1.textContent = totalPhotos;
+  if (statCard2) statCard2.textContent = new Set(samplePosts.map(p => p.name)).size;
+  if (statCard3) statCard3.textContent = samplePosts.filter(p => p.msg && p.msg !== '(사진만 공유)').length;
 
   grid.innerHTML = '';
   if (allPhotos.length === 0) {
