@@ -6,13 +6,13 @@ function showScreen(name, skipHistory = false) {
   const prev = currentScreenName;
   if (prev === name) return;
 
-  const isSlide  = (prev === 'upload' && name === 'gallery') || (prev === 'gallery' && name === 'upload');
+  const isSlide    = (prev === 'upload' && name === 'gallery') || (prev === 'gallery' && name === 'upload');
   const goingRight = screenOrder.indexOf(name) > screenOrder.indexOf(prev);
 
   if (!skipHistory && prev !== 'landing') screenHistory.push(prev);
   currentScreenName = name;
 
-  if (name === 'landing' || name === 'admin' || name === 'qr') {
+  if (name === 'landing' || name === 'admin' || name === 'qr' || name === 'invitation' || name === 'wedding') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('slide-wrapper').style.display = 'none';
     document.getElementById('main-nav').style.display = 'none';
@@ -61,6 +61,16 @@ function goBack(from) {
   } else {
     showToast('더 이상 뒤로 갈 수 없어요');
   }
+}
+
+function openMenu() {
+  document.getElementById('menu-panel').classList.add('open');
+  document.getElementById('menu-overlay').classList.add('open');
+}
+
+function closeMenu() {
+  document.getElementById('menu-panel').classList.remove('open');
+  document.getElementById('menu-overlay').classList.remove('open');
 }
 
 function showToast(msg) {

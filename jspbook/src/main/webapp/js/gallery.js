@@ -6,11 +6,9 @@ function setFilter(filter) {
   currentFilter = filter;
   const map = { all: 'filter-all', '신랑': 'filter-groom', '신부': 'filter-bride' };
   Object.entries(map).forEach(([key, id]) => {
-    const btn     = document.getElementById(id);
-    const isActive = key === filter;
-    btn.style.background  = isActive ? 'var(--white)' : 'transparent';
-    btn.style.color       = isActive ? 'var(--deep-rose)' : 'var(--text-muted)';
-    btn.style.boxShadow   = isActive ? '0 1px 3px var(--shadow)' : 'none';
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.toggle('active', key === filter);
   });
   renderTimeline();
 }
@@ -19,14 +17,8 @@ function setSort(type) {
   currentSort = type;
   const recentBtn  = document.getElementById('sort-recent');
   const popularBtn = document.getElementById('sort-popular');
-  const on  = 'var(--white)';
-  const off = 'transparent';
-  recentBtn.style.background  = type === 'recent'  ? on : off;
-  recentBtn.style.color       = type === 'recent'  ? 'var(--deep-rose)' : 'var(--text-muted)';
-  recentBtn.style.boxShadow   = type === 'recent'  ? '0 1px 3px var(--shadow)' : 'none';
-  popularBtn.style.background = type === 'popular' ? on : off;
-  popularBtn.style.color      = type === 'popular' ? 'var(--deep-rose)' : 'var(--text-muted)';
-  popularBtn.style.boxShadow  = type === 'popular' ? '0 1px 3px var(--shadow)' : 'none';
+  if (recentBtn)  recentBtn.classList.toggle('active', type === 'recent');
+  if (popularBtn) popularBtn.classList.toggle('active', type === 'popular');
   renderTimeline();
 }
 

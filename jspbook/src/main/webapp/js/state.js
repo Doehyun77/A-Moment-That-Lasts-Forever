@@ -18,8 +18,9 @@ let currentFilter = 'all';
 let adminFilter   = 'all';
 
 let screenHistory    = [];
-let currentScreenName = 'qr';
+let currentScreenName = 'operator';
 const screenOrder    = ['landing', 'upload', 'gallery'];
 
 let deleteTargetIndex = null;
 let qrInstance        = null;
+let currentEventCode  = '';   // TODO: 서버 연동 시 QR 생성 후 받은 코드 저장
