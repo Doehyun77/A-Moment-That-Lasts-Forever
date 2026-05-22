@@ -22,13 +22,15 @@ function setSort(type) {
   renderTimeline();
 }
 
-function renderTimeline() {
+async function renderTimeline() {
+  await loadPosts();
+
   const container = document.getElementById('timeline');
   container.innerHTML = '';
 
   const filtered = currentFilter === 'all'
-    ? samplePosts
-    : samplePosts.filter(p => p.side === currentFilter);
+    ? posts
+    : posts.filter(p => p.side === currentFilter);
 
   if (filtered.length === 0) {
     container.innerHTML = `
@@ -51,10 +53,12 @@ function renderTimeline() {
   document.getElementById('gallery-count').textContent = `총 ${sorted.length}개의 순간`;
 
   sorted.forEach((p, i) => {
-    const realIndex = samplePosts.indexOf(p);
-    const isOwn     = currentNickname && p.name === currentNickname;
-    const item      = document.createElement('div');
-    item.className  = 'timeline-item';
+    const canAutoDelete = !!p.canDelete;
+    const ownBadge = canAutoDelete
+      ? `<span style="display:inline-flex;align-items:center;margin-left:6px;padding:2px 7px;border-radius:999px;background:rgba(197,132,108,0.12);color:var(--deep-rose);font-size:10px;font-weight:600;letter-spacing:0.2px;vertical-align:middle;">내 글</span>`
+      : '';
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
     item.style.animationDelay = (i * 0.05) + 's';
 
     item.innerHTML = `
@@ -76,36 +80,61 @@ function renderTimeline() {
             ${p.side === '신부' ? `<span style="font-size:11px;font-weight:500;margin-right:4px;background:#F7C5D8;color:#9E2E55;padding:1px 6px;border-radius:4px;">[신부측]</span>` : ''}
             ${p.category ? `<span style="font-size:11px;color:var(--rose);font-weight:400;margin-right:4px;">[${p.category}]</span>` : ''}
             ${p.nick || p.name}
-            ${isOwn ? `<span style="font-size:10px;color:var(--rose);font-weight:400;opacity:0.5;">나</span>` : ''}
+            ${ownBadge}
           </div>
           <div class="timeline-time">${p.time}</div>
         </div>
         <div class="timeline-msg">${p.msg}</div>
         <div class="timeline-actions">
-          <button class="action-btn" id="like-btn-${realIndex}" onclick="toggleLike(${realIndex})" style="display:flex;align-items:center;gap:4px;">
-            <span id="like-heart-${realIndex}" style="font-size:15px;">${p.liked ? '♥' : '♡'}</span>
-            <span style="color:${p.liked ? '#C9A96E' : 'var(--text-muted)'};">좋아요</span>
-            <span id="like-count-${realIndex}" style="display:${p.likes > 0 ? 'inline' : 'none'};color:#C9A96E;font-size:11px;font-weight:500;">${p.likes}</span>
+          <button class="action-btn" id="like-btn-${p.id}" onclick="toggleLike(${p.id})" style="display:flex;align-items:center;gap:4px;">
+            <span id="like-heart-${p.id}" style="font-size:15px;color:${p.liked ? '#C9A96E' : ''};">${p.liked ? '♥' : '♡'}</span>
+            <span id="like-label-${p.id}" style="color:${p.liked ? '#C9A96E' : 'var(--text-muted)'};">좋아요</span>
+            <span id="like-count-${p.id}" style="display:${p.likes > 0 ? 'inline' : 'none'};color:#C9A96E;font-size:11px;font-weight:500;">${p.likes}</span>
           </button>
-          ${isOwn
-            ? `<button class="action-btn" onclick="confirmDelete(${realIndex})" style="color:var(--rose);margin-left:auto;">🗑 삭제</button>`
-            : `<button class="action-btn" onclick="showToast('신고되었습니다')">⚑ 신고</button>`}
+          ${canAutoDelete
+            ? `<button class="action-btn" onclick="confirmDelete(${p.id})" style="color:var(--rose);margin-left:auto;">🗑 내 글 삭제</button>`
+            : `<button class="action-btn" onclick="showToast('신고 기능은 준비 중이에요')">⚑ 신고</button>`}
         </div>
       </div>`;
     container.appendChild(item);
   });
 }
 
-function toggleLike(index) {
-  const p    = samplePosts[index];
-  p.liked    = !p.liked;
-  p.likes    = p.liked ? p.likes + 1 : p.likes - 1;
-  const heart   = document.getElementById('like-heart-'  + index);
-  const countEl = document.getElementById('like-count-'  + index);
-  const btn     = document.getElementById('like-btn-'    + index);
-  heart.textContent  = p.liked ? '♥' : '♡';
-  heart.style.color  = p.liked ? '#C9A96E' : '';
-  btn.querySelector('span:nth-child(2)').style.color = p.liked ? '#C9A96E' : 'var(--text-muted)';
-  countEl.textContent    = p.likes;
-  countEl.style.display  = p.likes > 0 ? 'inline' : 'none';
+async function toggleLike(postId) {
+  const p = posts.find(post => post.id === postId);
+  if (!p) return;
+
+  const btn = document.getElementById('like-btn-' + postId);
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await api_toggleLike(postId);
+    if (!res.success) {
+      showToast(res.error || '좋아요 처리에 실패했어요');
+      return;
+    }
+
+    p.liked = !!res.liked;
+    p.likes = Number(res.likes || 0);
+
+    const heart = document.getElementById('like-heart-' + postId);
+    const label = document.getElementById('like-label-' + postId);
+    const countEl = document.getElementById('like-count-' + postId);
+    if (!heart || !label || !countEl) return;
+
+    heart.textContent = p.liked ? '♥' : '♡';
+    heart.style.color = p.liked ? '#C9A96E' : '';
+    label.style.color = p.liked ? '#C9A96E' : 'var(--text-muted)';
+    countEl.textContent = String(p.likes);
+    countEl.style.display = p.likes > 0 ? 'inline' : 'none';
+
+    if (currentSort === 'popular') {
+      renderTimeline();
+    }
+  } catch (e) {
+    console.error('좋아요 처리 실패:', e);
+    showToast('좋아요 처리에 실패했어요');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }

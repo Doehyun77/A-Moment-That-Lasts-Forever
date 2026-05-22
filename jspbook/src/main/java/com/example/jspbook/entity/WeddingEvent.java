@@ -1,6 +1,7 @@
 package com.example.jspbook.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,6 +24,21 @@ public class WeddingEvent {
     @Column(name="created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name="wedding_date")
+    private LocalDate weddingDate;
+
+    @Column(name="qr_start_date")
+    private LocalDate qrStartDate;
+
+    @Column(name="qr_end_date")
+    private LocalDate qrEndDate;
+
+    @Column(name="deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name="deleted_at")
+    private LocalDateTime deletedAt;
+
     public Long getId() {
         return id;
     }
@@ -43,6 +59,26 @@ public class WeddingEvent {
         return createdAt;
     }
 
+    public LocalDate getWeddingDate() {
+        return weddingDate;
+    }
+
+    public LocalDate getQrStartDate() {
+        return qrStartDate;
+    }
+
+    public LocalDate getQrEndDate() {
+        return qrEndDate;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -61,5 +97,25 @@ public class WeddingEvent {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setWeddingDate(LocalDate weddingDate) {
+        this.weddingDate = weddingDate;
+    }
+
+    public void setQrStartDate(LocalDate qrStartDate) {
+        this.qrStartDate = qrStartDate;
+    }
+
+    public void setQrEndDate(LocalDate qrEndDate) {
+        this.qrEndDate = qrEndDate;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

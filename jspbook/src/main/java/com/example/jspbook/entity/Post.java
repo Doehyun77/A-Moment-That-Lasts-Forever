@@ -27,8 +27,8 @@ public class Post {
 	@Column(columnDefinition = "TEXT")
 	private String message;
 
-	@Column(name = "delete_pin")
-	private String deletePin;
+	@Column(name = "owner_session_id")
+	private String ownerSessionId;
 
 	private int likes = 0;
 
@@ -62,8 +62,8 @@ public class Post {
 		return message;
 	}
 
-	public String getDeletePin() {
-		return deletePin;
+	public String getOwnerSessionId() {
+		return ownerSessionId;
 	}
 
 	public int getLikes() {
@@ -102,8 +102,8 @@ public class Post {
 		this.message = message;
 	}
 
-	public void setDeletePin(String deletePin) {
-		this.deletePin = deletePin;
+	public void setOwnerSessionId(String ownerSessionId) {
+		this.ownerSessionId = ownerSessionId;
 	}
 
 	public void setLikes(int likes) {

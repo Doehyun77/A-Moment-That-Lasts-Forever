@@ -1,0 +1,7 @@
+/target/
+/var/*
+!/var/.gitkeep
+!/var/uploads/
+!/var/uploads/.gitkeep
+!/var/tmp/
+!/var/tmp/.gitkeep

@@ -1,4 +1,38 @@
 // ── 청첩장 ──────────────────────────────
+function refreshCreateWorkspace() {
+  const groom = document.getElementById('qr-groom')?.value.trim() || '';
+  const bride = document.getElementById('qr-bride')?.value.trim() || '';
+  const date = document.getElementById('wedding-date')?.value || '';
+  const start = document.getElementById('qr-start')?.value || '';
+  const end = document.getElementById('qr-end')?.value || '';
+
+  const statuses = [!!(groom && bride), !!date, !!invitationData, weddingPhotos.length >= 3];
+  const completed = statuses.filter(Boolean).length;
+  const percent = (completed / statuses.length) * 100;
+
+  const coupleSummary = document.getElementById('create-couple-summary');
+  const dateSummary = document.getElementById('create-date-summary');
+  const validitySummary = document.getElementById('create-validity-summary');
+  const invitationSummary = document.getElementById('create-invitation-summary');
+  const photoSummary = document.getElementById('create-photo-summary');
+  const progressText = document.getElementById('create-progress-text');
+  const progressCount = document.getElementById('create-progress-count');
+  const progressFill = document.getElementById('create-progress-fill');
+
+  if (coupleSummary) coupleSummary.textContent = groom && bride ? `${groom} ♥ ${bride}` : '이름 입력 대기';
+  if (dateSummary) dateSummary.textContent = date || '날짜 미선택';
+  if (validitySummary) validitySummary.textContent = start && end ? `${start} ~ ${end}` : (date ? '시작일/종료일 확인 필요' : '결혼식 날짜 선택 후 자동 제안');
+  if (invitationSummary) invitationSummary.textContent = invitationData ? '업로드 완료' : '미업로드';
+  if (photoSummary) photoSummary.textContent = `${weddingPhotos.length}장 업로드`;
+  if (progressCount) progressCount.textContent = `${completed} / 4`;
+  if (progressFill) progressFill.style.width = `${percent}%`;
+  if (progressText) {
+    if (completed === 4) progressText.textContent = '생성 준비가 완료되었습니다';
+    else if (completed === 0) progressText.textContent = '아직 기본 정보 입력 전입니다';
+    else progressText.textContent = `총 4단계 중 ${completed}단계가 준비되었습니다`;
+  }
+}
+
 let invitationData = null;
 
 function previewInvitation(e) {
@@ -11,6 +45,7 @@ function previewInvitation(e) {
     document.getElementById('invitation-preview').style.display = 'block';
     document.getElementById('invitation-drop').style.display = 'none';
     updateChecklist();
+    refreshCreateWorkspace();
     clearQR();
   };
   reader.readAsDataURL(file);
@@ -22,6 +57,7 @@ function clearInvitation() {
   document.getElementById('invitation-preview').style.display = 'none';
   document.getElementById('invitation-drop').style.display = 'block';
   updateChecklist();
+  refreshCreateWorkspace();
   clearQR();
 }
 
@@ -65,6 +101,7 @@ function renderWeddingPhotoGrid() {
   });
   document.getElementById('wedding-photo-count').textContent = `${weddingPhotos.length} / 3~8장`;
   document.getElementById('wedding-photo-count').style.color = weddingPhotos.length >= 3 ? 'var(--rose)' : 'var(--text-muted)';
+  refreshCreateWorkspace();
 }
 
 // ── 체크리스트 업데이트 ─────────────────
@@ -82,6 +119,7 @@ function updateChecklist() {
     const el = document.getElementById(id);
     if (el) { el.style.color = ok ? 'var(--rose)' : 'var(--text-muted)'; el.textContent = (ok ? '✓ ' : '◦ ') + el.textContent.replace(/^[✓◦] /, ''); }
   });
+  refreshCreateWorkspace();
 }
 
 function updateValidityRange() {
@@ -109,6 +147,7 @@ function updateValidityRange() {
   document.getElementById('validity-msg').textContent =
     `선택 가능 범위: ${fmt(minDate)} ~ ${fmt(maxDate)}`;
   document.getElementById('validity-msg').style.color = 'var(--text-muted)';
+  refreshCreateWorkspace();
 }
 
 function validateValidityRange() {
@@ -137,6 +176,7 @@ function validateValidityRange() {
   const days = Math.round((endD - startD) / 86400000) + 1;
   msg.textContent = `✓ QR 유효 기간 ${days}일 (${start} ~ ${end})`;
   msg.style.color = 'var(--rose)';
+  refreshCreateWorkspace();
 }
 
 function openConfirmModal() {
@@ -203,10 +243,15 @@ function validateDate(input) {
 
 // ── generateQRCode 오버라이드 ──────────
 const _origGenerateQR = generateQRCode;
-generateQRCode = function() {
+generateQRCode = async function() {
   const groom = document.getElementById('qr-groom').value.trim();
   const bride = document.getElementById('qr-bride').value.trim();
   const date  = document.getElementById('wedding-date').value;
+  const startVal = document.getElementById('qr-start').value || date;
+  const endVal   = document.getElementById('qr-end').value || (() => {
+    const d = new Date(date); d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  })();
 
   // 이름 반영
   document.getElementById('groom-name').textContent = groom;
@@ -214,27 +259,39 @@ generateQRCode = function() {
   document.querySelectorAll('.nav-couple').forEach(el => el.textContent = groom + ' ♥ ' + bride);
 
   // 만료일 표시
-  const startVal = document.getElementById('qr-start').value || date;
-  const endVal   = document.getElementById('qr-end').value   || (() => {
-    const d = new Date(date); d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
-  })();
   document.getElementById('qr-expiry').textContent = `유효기간: ${startVal} ~ ${endVal}`;
 
-  // QR 생성
-  const canvas = document.getElementById('qr-canvas');
-  canvas.innerHTML = '';
-  if (qrInstance) qrInstance.clear();
-  qrInstance = new QRCode(canvas, {
-    text: window.location.origin + window.location.pathname + '?mode=entry&groom=' + encodeURIComponent(groom) + '&bride=' + encodeURIComponent(bride),
-    width: 160, height: 160,
-    colorDark: '#2C1F1A', colorLight: '#FFFFFF',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-  document.getElementById('qr-names').textContent = groom + ' ♥ ' + bride;
-  document.getElementById('qr-output').style.display = 'block';
-  document.getElementById('qr-checklist').style.display = 'none';
-  showToast('사이트가 생성되었어요 💌');
+  // DB에 이벤트 생성
+  try {
+    const event = await api_createEvent(groom, bride, date, startVal, endVal);
+    currentEventCode = event.eventCode;
+
+    // 사진 업로드
+    const invitationFile = document.getElementById('invitation-input').files[0];
+    const photoFiles = document.getElementById('wedding-photo-input').files;
+    if (invitationFile || (photoFiles && photoFiles.length > 0)) {
+      await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles ? Array.from(photoFiles) : []);
+    }
+
+    // QR 생성 (고유 이벤트 코드 기반)
+    const qrUrl = buildEventEntryUrl(currentEventCode);
+    const canvas = document.getElementById('qr-canvas');
+    canvas.innerHTML = '';
+    if (qrInstance) qrInstance.clear();
+    qrInstance = new QRCode(canvas, {
+      text: qrUrl,
+      width: 180, height: 180,
+      colorDark: '#2C1F1A', colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    document.getElementById('qr-names').textContent = groom + ' ♥ ' + bride;
+    document.getElementById('qr-output').style.display = 'block';
+    document.getElementById('qr-checklist').style.display = 'none';
+    showToast('사이트가 생성되었어요 💌');
+  } catch (e) {
+    showToast('서버 오류가 발생했어요. 다시 시도해 주세요.');
+    console.error('Event creation failed:', e);
+  }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -244,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dateInput.min = today;
   }
   updateChecklist();
+  refreshCreateWorkspace();
 });
 
 document.addEventListener('input', () => updateChecklist());
@@ -297,6 +355,7 @@ function generateQRCode() {
 
 function clearQR() {
     document.getElementById('qr-output').style.display = 'none';
+    refreshCreateWorkspace();
 }
 
 function downloadQR() {
@@ -347,39 +406,215 @@ function handleCategoryChange() {
     wrap.classList.toggle('visible', sel === '직접입력');
 }
 
-function enterEvent() {
+function applyGuestSession(guest) {
+    currentNickname = guest.nick || guest.displayName || '';
+    currentCategory = guest.category;
+    currentNick = guest.nick || guest.displayName || '';
+    currentSide = guest.side;
+    document.getElementById('upload-greeting').textContent = (guest.nick || guest.displayName || '하객') + '님, 반갑습니다 🌸';
+}
+
+function syncEntryForm(guest) {
+    document.getElementById('nickname-input').value = guest.nick || '';
+    document.getElementById('category-select').value = guest.category || '';
+    const customWrap = document.getElementById('custom-category-wrap');
+    const customInput = document.getElementById('custom-category-input');
+    const knownCategories = ['직장동료', '가족', '초등친구', '중등친구', '고등친구', '대학동기', '군대동기'];
+    if (guest.category && !knownCategories.includes(guest.category)) {
+        document.getElementById('category-select').value = '직접입력';
+        customWrap.classList.add('visible');
+        customInput.value = guest.category;
+    } else {
+        customWrap.classList.toggle('visible', document.getElementById('category-select').value === '직접입력');
+        customInput.value = '';
+    }
+    currentSide = '';
+    selectSide(guest.side || '');
+}
+
+async function restoreGuestSession(eventCode) {
+    const session = await api_getGuestSession(eventCode);
+    if (!session.authenticated || !session.guest) return false;
+    applyGuestSession(session.guest);
+    syncEntryForm(session.guest);
+    currentScreenName = 'landing';
+    showScreen('upload');
+    return true;
+}
+
+function changeGuestIdentity() {
+    openGuestIdentityModal();
+}
+
+async function resetGuestIdentitySession() {
+    await api_clearGuestSession(currentEventCode);
+    currentNickname = '';
+    currentCategory = '';
+    currentNick = '';
+    currentSide = '';
+    currentEventInfo = null;
+    screenHistory = [];
+    document.getElementById('nickname-input').value = '';
+    document.getElementById('category-select').value = '';
+    document.getElementById('custom-category-input').value = '';
+    document.getElementById('custom-category-wrap').classList.remove('visible');
+    selectSide('');
+    resetLandingAvailabilityState();
+    closeGuestIdentityModal();
+    closeMenu();
+    currentScreenName = 'landing';
+    showScreen('landing');
+    showToast('입장 정보를 바꿀 수 있게 초기화했어요');
+}
+
+async function enterEvent() {
     const nick = document.getElementById('nickname-input').value.trim();
     if (!nick) { showToast('이름을 입력해 주세요'); return; }
-    const sel = document.getElementById('category-select').value;
-    if (!sel) { showToast('관계를 선택해 주세요 !'); return; }
-    if (!currentSide) { showToast('신랑측 / 신부측을 선택해 주세요 !'); return; }
-    let category = sel;
-    if (sel === '직접입력') {
-        category = document.getElementById('custom-category-input').value.trim();
-        if (!category) { showToast('관계를 직접 입력해 주세요'); return; }
+    if (nick.length > 5) { showToast('이름은 최대 5글자까지 입력할 수 있어요'); return; }
+
+    let category = document.getElementById('category-select').value;
+    if (!category) {
+        showToast('관계를 선택해 주세요');
+        return;
     }
-    currentNickname = currentSide + ' ' + category + ' ' + nick;
-    currentCategory = category;
-    currentNick = nick;
-    document.getElementById('upload-greeting').textContent = nick + '님, 반갑습니다 🌸';
+    if (category === '직접입력') {
+        const custom = document.getElementById('custom-category-input').value.trim();
+        if (!custom) {
+            showToast('관계를 입력해 주세요');
+            return;
+        }
+        category = custom;
+    }
+    if (!currentSide) {
+        showToast('신랑측 / 신부측을 선택해 주세요');
+        return;
+    }
+
+    const result = await api_enterGuestSession({
+        eventCode: currentEventCode,
+        nick,
+        category,
+        side: currentSide
+    });
+
+    if (!result.success || !result.guest) {
+        showToast(result.error || '입장 처리에 실패했어요');
+        return;
+    }
+
+    applyGuestSession(result.guest);
+    syncEntryForm(result.guest);
     currentScreenName = 'landing';
     showScreen('upload');
     showToast('입장되었습니다!');
+}
+
+function formatKoreanDate(dateText) {
+    if (!dateText) return '';
+    const date = new Date(dateText + 'T00:00:00');
+    if (Number.isNaN(date.getTime())) return dateText;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+}
+
+function resetLandingAvailabilityState() {
+    const title = document.getElementById('landing-title');
+    const subtitle = document.getElementById('landing-subtitle');
+    const notice = document.getElementById('landing-prestart-notice');
+    const message = document.getElementById('landing-prestart-message');
+    const icon = document.getElementById('landing-hero-icon');
+    const form = document.getElementById('landing-entry-form');
+
+    if (title) title.innerHTML = '영원의<br><em>순간</em>';
+    if (subtitle) subtitle.innerHTML = 'QR 코드를 스캔하여 입장하셨습니다<br>소중한 순간을 함께 기록해 주세요';
+    if (notice) notice.style.display = 'none';
+    if (message) message.textContent = '예식이 시작되면 이곳에서 사진과 메시지를 남길 수 있어요.';
+    if (icon) icon.textContent = '💌';
+    if (form) form.style.display = 'block';
+}
+
+function applyLandingAvailabilityState(event) {
+    resetLandingAvailabilityState();
+    currentEventInfo = event;
+
+    if (event.entryOpen) {
+        return;
+    }
+
+    const title = document.getElementById('landing-title');
+    const subtitle = document.getElementById('landing-subtitle');
+    const notice = document.getElementById('landing-prestart-notice');
+    const message = document.getElementById('landing-prestart-message');
+    const icon = document.getElementById('landing-hero-icon');
+    const form = document.getElementById('landing-entry-form');
+
+    if (title) title.innerHTML = event.status === 'ended' ? '운영이<br><em>종료되었어요</em>' : '아직<br><em>시작 전</em>';
+    if (subtitle) subtitle.innerHTML = '실물 청첩장의 QR로 들어오셨습니다<br>예식 시작 후 이용하실 수 있어요';
+    if (icon) icon.textContent = event.status === 'ended' ? '🕊️' : '⏳';
+    if (notice) notice.style.display = 'block';
+
+    const availableFrom = formatKoreanDate(event.availableFrom || event.qrStartDate || event.weddingDate || '');
+    if (message) {
+        if (event.status === 'before_start') {
+            message.innerHTML = availableFrom
+                ? `${event.statusMessage}<br><strong>${availableFrom}</strong>부터 사진과 메시지를 남길 수 있어요.`
+                : event.statusMessage;
+        } else {
+            message.textContent = event.statusMessage || '이 웨딩 페이지는 아직 이용할 수 없어요.';
+        }
+    }
+
+    if (form) form.style.display = 'none';
 }
 window.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
 
     if (params.get('mode') === 'entry') {
-        const groom = params.get('groom') || '신랑';
-        const bride = params.get('bride') || '신부';
+        ['screen-operator','screen-manage','screen-qr','screen-admin','screen-login'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
+        });
 
-        document.getElementById('groom-name').textContent = groom;
-        document.getElementById('bride-name').textContent = bride;
-        document.querySelectorAll('.nav-couple').forEach(el => el.textContent = groom + ' ♥ ' + bride);
+        const code = params.get('code');
 
-        document.getElementById('screen-qr').classList.remove('active');
-        document.getElementById('screen-landing').classList.add('active');
+        if (code) {
+            currentEventCode = code;
+            api_fetchEvent(code).then(async event => {
+                const groom = event.groomName || '신랑';
+                const bride = event.brideName || '신부';
 
-        currentScreenName = 'landing';
+                document.getElementById('groom-name').textContent = groom;
+                document.getElementById('bride-name').textContent = bride;
+                document.querySelectorAll('.nav-couple').forEach(el => el.textContent = groom + ' ♥ ' + bride);
+
+                applyLandingAvailabilityState(event);
+                document.getElementById('screen-landing').classList.add('active');
+                currentScreenName = 'landing';
+
+                if (event.entryOpen) {
+                    await restoreGuestSession(code);
+                }
+            }).catch(() => {
+                showToast('잘못된 접근이에요');
+            });
+        } else {
+            const groom = params.get('groom') || '신랑';
+            const bride = params.get('bride') || '신부';
+
+            document.getElementById('groom-name').textContent = groom;
+            document.getElementById('bride-name').textContent = bride;
+            document.querySelectorAll('.nav-couple').forEach(el => el.textContent = groom + ' ♥ ' + bride);
+
+            resetLandingAvailabilityState();
+            document.getElementById('screen-landing').classList.add('active');
+            currentScreenName = 'landing';
+        }
+    }
+
+    if (document.getElementById('screen-qr')) {
+        updateChecklist();
+        refreshCreateWorkspace();
     }
 });

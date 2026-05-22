@@ -1,5 +1,5 @@
 // =====================================================
-//  upload.js — 사진 업로드 / 미리보기 / PIN 설정
+//  upload.js — 사진 업로드 / 미리보기
 // =====================================================
 
 function triggerFileInput() {
@@ -60,41 +60,18 @@ function updateCharCount() {
     document.getElementById('message-input').value.length;
 }
 
-// ── PIN 설정 모달 ─────────────────────────────────
-
-function updatePinDots() {
-  const val = document.getElementById('delete-pin-input').value;
-  for (let i = 0; i < 4; i++) {
-    document.getElementById('dot-' + i).classList.toggle('filled', i < val.length);
-  }
-}
-
 function openPinSetModal() {
   const msg = document.getElementById('message-input').value.trim();
   if (!msg && pendingPhotos.length === 0) {
     showToast('사진 또는 메시지를 입력해주세요');
     return;
   }
-  document.getElementById('delete-pin-input').value = '';
-  document.getElementById('pin-set-error').textContent = '';
-  updatePinDots();
-  document.getElementById('pin-set-modal').style.display = 'flex';
-  setTimeout(() => document.getElementById('delete-pin-input').focus(), 100);
-}
-
-function closePinSetModal() {
-  document.getElementById('pin-set-modal').style.display = 'none';
+  submitUpload();
 }
 
 // ── 게시물 공유 ───────────────────────────────────
 
 function submitUpload() {
-  const pin = document.getElementById('delete-pin-input').value.trim();
-  if (!pin || pin.length !== 4) {
-    document.getElementById('pin-set-error').textContent = '숫자 4자리를 입력해주세요';
-    return;
-  }
-  closePinSetModal();
   const msg      = document.getElementById('message-input').value.trim();
   const postData = {
     name:     currentNickname || '익명 하객',
@@ -103,16 +80,14 @@ function submitUpload() {
     side:     currentSide,
     msg:      msg || '(사진만 공유)',
     color:    '#C5826A',
-    pin,
   };
-  api_uploadPost(postData, pendingFiles).then(res => {
-    if (!res.success) { showToast('업로드에 실패했어요'); return; }
-    postCount     = samplePosts.length;
+  api_uploadPost(postData, pendingFiles).then(async res => {
+    if (!res.success) { showToast(res.error || '업로드에 실패했어요'); return; }
+    await loadPosts();
     pendingPhotos = [];
     pendingFiles  = [];
     document.getElementById('message-input').value   = '';
     document.getElementById('char-count').textContent = '0';
-    document.getElementById('delete-pin-input').value = '';
     renderPreviewStrip();
     renderAdminGrid();
     showToast('공유되었습니다 💌');

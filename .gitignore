@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Maven / build output
+jspbook/target/
+
+# Runtime uploads / local runtime state
+jspbook/uploads/
+jspbook/var/uploads/*
+!jspbook/var/uploads/.gitkeep
+jspbook/var/tmp/*
+!jspbook/var/tmp/.gitkeep
+
+# Local backup artifacts
+jspbook/src/main/webapp/*.bak
+jspbook/src/main/webapp/legacy_backup_*/
+jspbook/src/main/webapp.backup.*/
+jspbook/design_backup_*/
+jspbook/rollback_backup_*/
+jspbook/pre_*/
+
+# Local logs / temp
+*.log
