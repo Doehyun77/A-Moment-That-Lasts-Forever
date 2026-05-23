@@ -525,13 +525,33 @@ const DUMMY_WEDDING_PHOTOS = [
 ];
 
 function showInvitationScreen() {
-  const src = invitationData || DUMMY_INVITATION;
-  document.getElementById('invitation-display-img').src = src;
-  document.getElementById('invitation-modal').style.display = 'flex';
+  const modal   = document.getElementById('invitation-modal');
+  const imgView = document.getElementById('invitation-img-view');
+  const urlView = document.getElementById('invitation-url-view');
+  const imgEl   = document.getElementById('invitation-display-img');
+  const ifrEl   = document.getElementById('invitation-display-iframe');
+
+  const useUrl = typeof invitationType !== 'undefined'
+    && invitationType === 'url'
+    && typeof invitationUrl !== 'undefined'
+    && !!invitationUrl;
+
+  if (useUrl) {
+    imgView.style.display = 'none';
+    urlView.style.display = 'flex';
+    ifrEl.src = invitationUrl;
+  } else {
+    imgEl.src = invitationData || DUMMY_INVITATION;
+    imgView.style.display = 'flex';
+    urlView.style.display = 'none';
+  }
+  modal.style.display = 'block';
 }
 
 function closeInvitationModal() {
   document.getElementById('invitation-modal').style.display = 'none';
+  const ifrEl = document.getElementById('invitation-display-iframe');
+  if (ifrEl) ifrEl.src = '';
 }
 
 function showWeddingPhotoScreen() {

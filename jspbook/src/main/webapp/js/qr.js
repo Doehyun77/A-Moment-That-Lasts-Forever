@@ -6,7 +6,8 @@ function refreshCreateWorkspace() {
   const start = document.getElementById('qr-start')?.value || '';
   const end = document.getElementById('qr-end')?.value || '';
 
-  const statuses = [!!(groom && bride), !!date, !!invitationData, weddingPhotos.length >= 3];
+  const hasInvitation = !!invitationData || (typeof invitationType !== 'undefined' && invitationType === 'url' && typeof invitationUrl !== 'undefined' && !!invitationUrl);
+  const statuses = [!!(groom && bride), !!date, hasInvitation, weddingPhotos.length >= 3];
   const completed = statuses.filter(Boolean).length;
   const percent = (completed / statuses.length) * 100;
 
@@ -22,7 +23,11 @@ function refreshCreateWorkspace() {
   if (coupleSummary) coupleSummary.textContent = groom && bride ? `${groom} ♥ ${bride}` : '이름 입력 대기';
   if (dateSummary) dateSummary.textContent = date || '날짜 미선택';
   if (validitySummary) validitySummary.textContent = start && end ? `${start} ~ ${end}` : (date ? '시작일/종료일 확인 필요' : '결혼식 날짜 선택 후 자동 제안');
-  if (invitationSummary) invitationSummary.textContent = invitationData ? '업로드 완료' : '미업로드';
+  if (invitationSummary) {
+    if (invitationData) invitationSummary.textContent = '이미지 업로드 완료';
+    else if (typeof invitationType !== 'undefined' && invitationType === 'url' && typeof invitationUrl !== 'undefined' && invitationUrl) invitationSummary.textContent = '링크 등록 완료';
+    else invitationSummary.textContent = '미업로드';
+  }
   if (photoSummary) photoSummary.textContent = `${weddingPhotos.length}장 업로드`;
   if (progressCount) progressCount.textContent = `${completed} / 4`;
   if (progressFill) progressFill.style.width = `${percent}%`;
@@ -112,7 +117,7 @@ function updateChecklist() {
   const checks = {
     'check-names':      groom && bride,
     'check-date':       !!date,
-    'check-invitation': !!invitationData,
+    'check-invitation': !!invitationData || (typeof invitationType !== 'undefined' && invitationType === 'url' && typeof invitationUrl !== 'undefined' && !!invitationUrl),
     'check-photos':     weddingPhotos.length >= 3,
   };
   Object.entries(checks).forEach(([id, ok]) => {
@@ -266,15 +271,23 @@ generateQRCode = async function() {
     const event = await api_createEvent(groom, bride, date, startVal, endVal);
     currentEventCode = event.eventCode;
 
-    // 사진 업로드
-    const invitationFile = document.getElementById('invitation-input').files[0];
+    // 사진 업로드 (이미지 청첩장 또는 웨딩 사진)
+    const invitationFile = (typeof invitationType === 'undefined' || invitationType === 'image')
+      ? document.getElementById('invitation-input').files[0]
+      : null;
     const photoFiles = document.getElementById('wedding-photo-input').files;
     if (invitationFile || (photoFiles && photoFiles.length > 0)) {
       await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles ? Array.from(photoFiles) : []);
     }
 
-    // QR 생성 (고유 이벤트 코드 기반)
-    const qrUrl = buildEventEntryUrl(currentEventCode);
+    // QR 생성 (고유 이벤트 코드 기반, 청첩장 URL·FAQ 파라미터 포함)
+    let qrUrl = buildEventEntryUrl(currentEventCode);
+    if (typeof invitationType !== 'undefined' && invitationType === 'url'
+        && typeof invitationUrl !== 'undefined' && invitationUrl) {
+      qrUrl += '&invUrl=' + encodeURIComponent(invitationUrl);
+    }
+    const encodedFaq = (typeof encodeFaqForUrl === 'function') ? encodeFaqForUrl() : '';
+    if (encodedFaq) qrUrl += '&faq=' + encodedFaq;
     const canvas = document.getElementById('qr-canvas');
     canvas.innerHTML = '';
     if (qrInstance) qrInstance.clear();
@@ -403,7 +416,7 @@ function selectSide(side) {
 function handleCategoryChange() {
     const sel = document.getElementById('category-select').value;
     const wrap = document.getElementById('custom-category-wrap');
-    wrap.classList.toggle('visible', sel === '직접입력');
+    wrap.style.display = sel === '직접입력' ? 'block' : 'none';
 }
 
 function applyGuestSession(guest) {
@@ -422,10 +435,10 @@ function syncEntryForm(guest) {
     const knownCategories = ['직장동료', '가족', '초등친구', '중등친구', '고등친구', '대학동기', '군대동기'];
     if (guest.category && !knownCategories.includes(guest.category)) {
         document.getElementById('category-select').value = '직접입력';
-        customWrap.classList.add('visible');
+        customWrap.style.display = 'block';
         customInput.value = guest.category;
     } else {
-        customWrap.classList.toggle('visible', document.getElementById('category-select').value === '직접입력');
+        customWrap.style.display = document.getElementById('category-select').value === '직접입력' ? 'block' : 'none';
         customInput.value = '';
     }
     currentSide = '';
@@ -457,7 +470,7 @@ async function resetGuestIdentitySession() {
     document.getElementById('nickname-input').value = '';
     document.getElementById('category-select').value = '';
     document.getElementById('custom-category-input').value = '';
-    document.getElementById('custom-category-wrap').classList.remove('visible');
+    document.getElementById('custom-category-wrap').style.display = 'none';
     selectSide('');
     resetLandingAvailabilityState();
     closeGuestIdentityModal();
@@ -593,6 +606,18 @@ window.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('screen-landing').classList.add('active');
                 currentScreenName = 'landing';
 
+                const rawInvUrl = params.get('invUrl');
+                if (rawInvUrl && typeof invitationType !== 'undefined') {
+                    invitationType = 'url';
+                    invitationUrl = rawInvUrl;
+                }
+
+                const rawFaq = params.get('faq');
+                if (rawFaq && typeof decodeFaqFromUrl === 'function') {
+                    const decoded = decodeFaqFromUrl(rawFaq);
+                    if (decoded.length > 0) faqItems = decoded;
+                }
+
                 if (event.entryOpen) {
                     await restoreGuestSession(code);
                 }
@@ -610,6 +635,18 @@ window.addEventListener('DOMContentLoaded', function() {
             resetLandingAvailabilityState();
             document.getElementById('screen-landing').classList.add('active');
             currentScreenName = 'landing';
+
+            const rawInvUrl = params.get('invUrl');
+            if (rawInvUrl && typeof invitationType !== 'undefined') {
+                invitationType = 'url';
+                invitationUrl = rawInvUrl;
+            }
+
+            const rawFaq = params.get('faq');
+            if (rawFaq && typeof decodeFaqFromUrl === 'function') {
+                const decoded = decodeFaqFromUrl(rawFaq);
+                if (decoded.length > 0) faqItems = decoded;
+            }
         }
     }
 

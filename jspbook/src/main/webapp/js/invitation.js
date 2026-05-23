@@ -2,7 +2,7 @@
 //  invitation.js — 청첩장 페이지 / 이미지·링크 처리
 // =====================================================
 
-const DUMMY_INVITATION = 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&q=80';
+// DUMMY_INVITATION is already declared in ui.js (loaded earlier)
 
 let invitationType = 'image'; // 'image' or 'url'
 let invitationUrl  = '';
@@ -46,29 +46,4 @@ function clearInvitationUrl() {
 function resizeIframe(iframe) {
   iframe.style.height = 'calc(100vh - 60px)';
   iframe.style.overflowY = 'scroll';
-}
-
-function showInvitationScreen() {
-  const imgEl      = document.getElementById('invitation-display-img');
-  const iframeWrap = document.getElementById('invitation-display-iframe-wrap');
-  const iframeEl   = document.getElementById('invitation-display-iframe');
-
-  if (invitationType === 'url' && invitationUrl) {
-    imgEl.style.display      = 'none';
-    iframeWrap.style.display = 'block';
-    iframeEl.onload = function() { resizeIframe(iframeEl); };
-    iframeEl.src             = invitationUrl;
-  } else {
-    const src = invitationData || DUMMY_INVITATION;
-    imgEl.src                = src;
-    imgEl.style.display      = 'block';
-    iframeWrap.style.display = 'none';
-  }
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('slide-wrapper').style.display = 'none';
-  document.getElementById('main-nav').style.display = 'none';
-  document.querySelectorAll('.screen-body').forEach(b => b.style.display = 'none');
-  document.getElementById('screen-invitation').classList.add('active');
-  currentScreenName = 'invitation';
-  screenHistory.push('upload');
 }
