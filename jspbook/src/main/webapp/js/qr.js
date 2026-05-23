@@ -1,4 +1,4 @@
-// ── 청첩장 ──────────────────────────────
+// ── 청첩장 ─────────────────────────────
 function refreshCreateWorkspace() {
   const groom = document.getElementById('qr-groom')?.value.trim() || '';
   const bride = document.getElementById('qr-bride')?.value.trim() || '';
@@ -63,25 +63,30 @@ function clearInvitation() {
 
 // ── 웨딩 사진 ──────────────────────────
 let weddingPhotos = [];
+let weddingPhotoFiles = [];
 
 function addWeddingPhotos(e) {
   const files = Array.from(e.target.files);
   const remaining = 8 - weddingPhotos.length;
-  files.slice(0, remaining).forEach(f => {
+  const selectedFiles = files.slice(0, remaining);
+
+  selectedFiles.forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
       weddingPhotos.push(ev.target.result);
+      weddingPhotoFiles.push(file);
       renderWeddingPhotoGrid();
       updateChecklist();
       clearQR();
     };
-    reader.readAsDataURL(f);
+    reader.readAsDataURL(file);
   });
   e.target.value = '';
 }
 
 function removeWeddingPhoto(idx) {
   weddingPhotos.splice(idx, 1);
+  weddingPhotoFiles.splice(idx, 1);
   renderWeddingPhotoGrid();
   updateChecklist();
   clearQR();
@@ -264,13 +269,21 @@ generateQRCode = async function() {
   // DB에 이벤트 생성
   try {
     const event = await api_createEvent(groom, bride, date, startVal, endVal);
+    if (!event || !event.eventCode) {
+      showToast(event?.error || '사이트 생성에 실패했어요. 다시 시도해 주세요.');
+      return;
+    }
     currentEventCode = event.eventCode;
 
     // 사진 업로드
     const invitationFile = document.getElementById('invitation-input').files[0];
-    const photoFiles = document.getElementById('wedding-photo-input').files;
-    if (invitationFile || (photoFiles && photoFiles.length > 0)) {
-      await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles ? Array.from(photoFiles) : []);
+    const photoFiles = weddingPhotoFiles;
+    if (invitationFile || photoFiles.length > 0) {
+      const uploadResult = await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles);
+      if (!uploadResult || uploadResult.success !== true) {
+        showToast(uploadResult?.error || '사이트는 생성됐지만 사진 업로드에 실패했어요. 다시 시도해 주세요.');
+        return;
+      }
     }
 
     // QR 생성 (고유 이벤트 코드 기반)
