@@ -13,7 +13,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>jspbook</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.1.1</version>
     <name>jspbook</name>
 
     <properties>
