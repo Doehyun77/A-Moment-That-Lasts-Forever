@@ -86,6 +86,34 @@ function normalizeFiles(files) {
     return Array.from(files).filter(Boolean);
 }
 
+function dataUrlToFile(dataUrl, index) {
+    const [header, base64] = String(dataUrl).split(',');
+    if (!header || !base64) return null;
+
+    const mimeMatch = header.match(/data:([^;]+)/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const extension = mimeType.split('/')[1] || 'jpg';
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    return new File([bytes], `wedding_photo_${index + 1}.${extension}`, { type: mimeType });
+}
+
+function getPreviewWeddingPhotoFiles() {
+    try {
+        if (typeof weddingPhotos === 'undefined' || !Array.isArray(weddingPhotos)) return [];
+        return weddingPhotos
+            .map((src, index) => String(src).startsWith('data:') ? dataUrlToFile(src, index) : null)
+            .filter(Boolean);
+    } catch {
+        return [];
+    }
+}
+
 function getCurrentEventCodeForApi() {
     if (typeof currentEventCode !== 'undefined' && currentEventCode) return currentEventCode;
     return window.currentEventCode || '';
@@ -126,8 +154,11 @@ async function api_fetchEvent(eventCode) {
 async function api_uploadEventPhotos(eventCode, invitationFile, photoFiles = []) {
     return await safeApiResult(async () => {
         const form = new FormData();
+        const normalizedPhotos = normalizeFiles(photoFiles);
+        const uploadPhotos = normalizedPhotos.length > 0 ? normalizedPhotos : getPreviewWeddingPhotoFiles();
+
         if (invitationFile) form.append('invitation', invitationFile);
-        normalizeFiles(photoFiles).forEach(file => form.append('photos', file));
+        uploadPhotos.forEach(file => form.append('photos', file));
 
         return await apiRequest(`/api/events/${encodeURIComponent(eventCode)}/gallery`, {
             method: 'POST',
