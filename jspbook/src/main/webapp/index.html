@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20260524e">
+<link rel="stylesheet" href="css/style.css?v=20260530e">
 </head>
 <body>
 
@@ -52,12 +52,9 @@
       <button class="nav-item active">📊 대시보드</button>
       <button class="nav-item" onclick="opGoCreate()">✨ 사이트 생성</button>
       <button class="nav-item" onclick="opGoManage()">📋 사이트 관리</button>
-      <button class="nav-item" onclick="showScreen('admin')">🖼 업로드 관리</button>
 
       <div class="nav-section-label">SYSTEM</div>
-      <button class="nav-item">🔐 관리자 설정</button>
       <button class="nav-item">🧾 운영 로그</button>
-      <button class="nav-item">⚙️ 서비스 설정</button>
 
       <div class="sidebar-footer">
         <strong>운영자 전용 화면</strong>
@@ -71,39 +68,26 @@
         <div>
           <div class="breadcrumb">Admin Console / Dashboard</div>
         </div>
-        <div class="top-actions">
-          <div class="pill">🟢 Local 8080</div>
-          <div class="pill" id="op-system-title">상태 확인 중</div>
-        </div>
       </header>
 
-      <section class="hero">
-        <div class="hero-card">
-          <div class="eyebrow">SERVICE OPERATION DASHBOARD</div>
-          <h1>웨딩 사이트를 생성하고<br><span>행사 운영 상태를 관리하세요.</span></h1>
-          <p class="hero-desc" id="op-hero-summary">
-            이 화면은 서비스를 배포하는 운영자 전용 콘솔입니다. 신랑·신부 정보 등록,
-            QR 발급, 업로드 현황, 행사별 사진 수와 참여 하객 수를 한 곳에서 관리합니다.
-          </p>
-          <div class="hero-actions">
-            <button class="btn btn-primary" onclick="opGoCreate()">새 웨딩 사이트 생성</button>
-            <button class="btn btn-secondary" onclick="opGoManage()">전체 사이트 관리</button>
+      <!-- ── 시스템 상태 스크롤 티커 ── -->
+      <div class="status-ticker-wrap">
+        <div class="status-ticker-label">SYSTEM</div>
+        <div class="status-ticker-track">
+          <div class="status-ticker-inner" id="status-ticker-inner">
+            <span class="ticker-item">🟡 Spring Boot API — <span id="op-system-api">CHECKING</span></span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item">🟡 MySQL Database — <span id="op-system-db">CHECKING</span></span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item">🟢 QR Generator — ACTIVE</span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item">🟡 Upload Directory — <span id="op-system-dashboard">CHECKING</span></span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item ticker-summary-item" id="ticker-summary">총 사이트 <span class="ts-sites" id="op-stat-total-sites-t">-</span>건 · 사진 <span class="ts-photos" id="op-stat-total-photos-t">-</span>장 · 하객 <span class="ts-guests" id="op-stat-total-guests-t">-</span>명</span>
+            <span class="ticker-sep">◆</span>
           </div>
         </div>
-
-        <div class="system-card">
-          <div class="system-title">SYSTEM STATUS</div>
-          <div class="system-big">정상 운영</div>
-          <div class="system-desc">현재 API 서버, DB 연결, 업로드 경로 상태를 확인합니다.</div>
-
-          <div class="health-list">
-            <div class="health-item"><span>Spring Boot API</span><span id="op-system-api" class="ok">CHECKING</span></div>
-            <div class="health-item"><span>MySQL Database</span><span id="op-system-db" class="ok">CHECKING</span></div>
-            <div class="health-item"><span>Upload Directory</span><span id="op-system-dashboard" class="ok">CHECKING</span></div>
-            <div class="health-item"><span>QR Generator</span><span class="ok">ACTIVE</span></div>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <section class="stats-grid">
         <div class="stat-card">
@@ -128,45 +112,21 @@
         </div>
       </section>
 
-      <section class="section-grid">
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <h2>빠른 작업</h2>
-              <p>운영자가 자주 사용하는 기능입니다.</p>
-            </div>
-          </div>
-
-          <div class="quick-actions">
-            <div class="quick-card" onclick="opGoCreate()">
-              <div class="quick-icon">✨</div>
-              <div>
-                <div class="quick-title">신규 웨딩 사이트 생성</div>
-                <div class="quick-desc">신랑·신부 정보, 날짜, 유효기간, QR 생성</div>
-              </div>
-              <div class="arrow">→</div>
-            </div>
-
-            <div class="quick-card" onclick="opGoManage()">
-              <div class="quick-icon">📋</div>
-              <div>
-                <div class="quick-title">생성된 사이트 관리</div>
-                <div class="quick-desc">당일/예정/지난 행사 분류 및 상태 확인</div>
-              </div>
-              <div class="arrow">→</div>
-            </div>
-
-            <div class="quick-card" onclick="showScreen('admin')">
-              <div class="quick-icon">🖼</div>
-              <div>
-                <div class="quick-title">업로드 사진 검수</div>
-                <div class="quick-desc">행사별 사진, 메시지, 삭제 요청 확인</div>
-              </div>
-              <div class="arrow">→</div>
-            </div>
+      <!-- ── 월별 결혼식 서비스 현황 차트 ── -->
+      <section class="monthly-chart-section">
+        <div class="monthly-chart-header">
+          <div>
+            <div class="eyebrow" style="font-size:11px; margin-bottom:10px;">MONTHLY ANALYTICS</div>
+            <h3 style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; color:var(--deep-rose); margin-bottom:6px;">월별 결혼식 서비스 현황</h3>
+            <p style="font-size:13px; color:var(--muted); line-height:1.6;">생성된 결혼식 사이트의 월별 추이를 확인합니다</p>
           </div>
         </div>
+        <div class="monthly-chart-body" id="chart-body">
+          <div class="chart-placeholder">데이터 로딩 중...</div>
+        </div>
+      </section>
 
+      <section class="section-grid" style="grid-template-columns:1fr;">
         <div class="panel">
           <div class="panel-head">
             <div>
@@ -199,7 +159,7 @@
   <div style="min-height:100vh; background:#F8F5F0; display:flex; flex-direction:column;">
     <div style="background:rgba(255,255,255,0.92); border-bottom:1px solid var(--border); padding:16px 40px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
       <div style="display:flex; align-items:center; gap:16px; min-width:0;">
-        <button onclick="showScreen('operator')" style="border:none; background:transparent; cursor:pointer; color:var(--text-muted); font-size:13px; display:flex; align-items:center; gap:4px; font-family:'Noto Sans KR',sans-serif; font-weight:600;">← 홈</button>
+        <button class="console-back-btn" onclick="showScreen('operator')">← 홈</button>
         <div>
           <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; color:var(--deep-rose);"><span style="font-style:italic;">A Moment</span> That Lasts</div>
           <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">사이트 관리</div>
@@ -207,7 +167,6 @@
       </div>
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div id="manage-total" style="font-size:12px; color:var(--text-muted);">총 0건</div>
-        <button onclick="showScreen('qr')" style="padding:8px 16px; background:var(--deep-rose); color:white; border:none; border-radius:8px; font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer;">+ 새 사이트 생성</button>
       </div>
     </div>
 
@@ -238,7 +197,7 @@
       <section id="manage-today-section" class="manage-section-card featured" style="padding:24px 26px;">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
           <div style="width:10px; height:10px; border-radius:50%; background:#4CAF50; animation:pulse2 1.5s infinite;"></div>
-          <div style="font-size:14px; font-weight:600; color:#2E7D32;">오늘의 결혼식</div>
+          <div class="manage-section-label-text" style="color:#2E7D32;">오늘의 결혼식</div>
           <div id="today-count" class="manage-count-chip">0건</div>
         </div>
         <div id="today-list" class="manage-today-grid"></div>
@@ -247,7 +206,7 @@
       <section id="manage-future-section" class="manage-section-card" style="padding:24px 26px;">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
           <div style="width:10px; height:10px; border-radius:50%; background:var(--gold);"></div>
-          <div style="font-size:14px; font-weight:600; color:var(--dark-gold);">예정된 결혼식</div>
+          <div class="manage-section-label-text" style="color:var(--dark-gold);">예정된 결혼식</div>
           <div id="future-count" class="manage-count-chip">0건</div>
         </div>
         <div id="future-list" class="manage-list-stack"></div>
@@ -257,7 +216,7 @@
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <div style="width:10px; height:10px; border-radius:50%; background:#9E9E9E;"></div>
-            <div style="font-size:14px; font-weight:600; color:var(--text-muted);">지난 결혼식</div>
+            <div class="manage-section-label-text" style="color:var(--text-muted);">지난 결혼식</div>
             <div id="past-count" class="manage-count-chip">0건</div>
           </div>
           <button id="manage-past-toggle" class="panel-link-btn" onclick="togglePastSection()">펼치기</button>
@@ -463,19 +422,14 @@
               <div id="qr-names" class="qr-preview-title"></div>
               <div id="qr-expiry" class="qr-preview-caption"></div>
             </div>
-            <div class="qr-preview-actions">
+            <div class="qr-preview-actions" style="grid-template-columns:1fr;">
               <button onclick="downloadQR()" class="console-secondary-btn">QR 저장</button>
-              <button onclick="goToEntry()" class="console-secondary-btn muted">미리보기</button>
             </div>
           </div>
         </article>
       </section>
     </main>
 
-    <footer class="console-footer-bar">
-      <div class="console-footer-copy">생성 직후 하객 입장 화면까지 바로 점검할 수 있습니다.</div>
-      <button onclick="goToEntry()" class="footer-outline-btn">하객 화면 미리보기</button>
-    </footer>
   </div>
 </div>
 
@@ -653,7 +607,10 @@
 <!-- ── ADMIN ── -->
 <div id="screen-admin" class="screen">
   <nav class="top-nav">
-    <div class="nav-logo" style="color:var(--dark-gold); font-size:clamp(13px, 3.5vw, 18px);">관리자 페이지</div>
+    <div class="nav-logo">
+      <span class="nav-couple">신랑 ♥ 신부</span>
+      <span>Admin</span> Page
+    </div>
     <button onclick="adminLogout()" style="padding:6px 12px; font-size:11px; background:transparent; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans KR',sans-serif; color:var(--text-soft); cursor:pointer; white-space:nowrap;">로그아웃</button>
   </nav>
   <div class="admin-body">
@@ -748,6 +705,33 @@
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- ── 사이트 관리 QR 모달 ── -->
+<div id="site-manage-preview-modal" style="display:none; position:fixed; inset:0; background:rgba(44,31,26,0.5); z-index:500; align-items:center; justify-content:center;">
+  <div style="background:var(--white); border-radius:24px; padding:28px 24px; width:calc(100% - 48px); max-width:360px; position:relative;">
+    <!-- 닫기 버튼 -->
+    <button onclick="closeSiteManagePreview()" style="position:absolute; top:16px; right:16px; border:none; background:transparent; font-size:18px; color:var(--text-muted); cursor:pointer; line-height:1; padding:4px 8px;">✕</button>
+    <!-- 헤더 -->
+    <div style="text-align:center; margin-bottom:20px;">
+      <div style="font-size:10px; color:var(--rose); font-weight:700; letter-spacing:0.15em; margin-bottom:6px;">QR CODE</div>
+      <div id="site-manage-preview-title" style="font-family:'Cormorant Garamond',serif; font-size:24px; color:var(--deep-rose); font-weight:400;"></div>
+      <div id="site-manage-preview-date" style="font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
+      <div id="site-manage-preview-status" style="font-size:11px; color:var(--text-muted); margin-top:4px; line-height:1.6;"></div>
+    </div>
+    <!-- QR 코드 -->
+    <div id="site-manage-preview-qr" style="display:flex; justify-content:center; align-items:center; padding:16px; background:var(--cream); border-radius:16px; margin-bottom:18px;"></div>
+    <!-- 링크 복사 -->
+    <div style="display:flex; gap:8px; align-items:center; background:var(--cream); border-radius:10px; padding:10px 14px; margin-bottom:16px;">
+      <input id="site-manage-preview-link" readonly style="flex:1; border:none; background:transparent; font-size:11px; color:var(--text-muted); font-family:'Noto Sans KR',sans-serif; outline:none; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+      <button onclick="copySitePreviewLink()" style="border:none; background:transparent; color:var(--rose); font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:'Noto Sans KR',sans-serif; flex-shrink:0;">복사</button>
+    </div>
+    <!-- 액션 버튼 -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <button onclick="downloadSitePreviewQr()" style="height:42px; border:1px solid var(--border); border-radius:10px; background:transparent; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--text-soft); cursor:pointer; font-weight:500;">QR 저장</button>
+      <button onclick="openSitePreviewLink()" style="height:42px; border:none; border-radius:10px; background:var(--deep-rose); font-family:'Noto Sans KR',sans-serif; font-size:13px; color:white; cursor:pointer; font-weight:500;">하객 화면</button>
+    </div>
   </div>
 </div>
 
@@ -863,10 +847,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="js/state.js?v=20260522d"></script>
 <script src="js/api.js?v=20260522d"></script>
-<script src="js/ui.js?v=20260522d"></script>
+<script src="js/ui.js?v=20260530e"></script>
 <script src="js/gallery.js?v=20260522d"></script>
 <script src="js/upload.js?v=20260522d"></script>
-<script src="js/admin.js?v=20260522d"></script>
+<script src="js/admin.js?v=20260530b"></script>
 <script src="js/faq.js?v=20260524e"></script>
 <script src="js/invitation.js?v=20260524e"></script>
 <script src="js/qr.js?v=20260524e"></script>
