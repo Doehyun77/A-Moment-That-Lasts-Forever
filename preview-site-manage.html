@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사이트 관리 — Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-rose: #8B4A38;
+    --rose: #C5826A;
+    --gold: #C9A96E;
+    --dark-gold: #A88344;
+    --cream: #F5F0EB;
+    --ivory: #F8F5F0;
+    --white: #FFFFFF;
+    --text: #2C1F1A;
+    --text-soft: #5A4038;
+    --text-muted: #9B8B84;
+    --border: rgba(139,74,56,0.10);
+    --card-bg: rgba(255,255,255,0.92);
+    --shadow: rgba(62,41,34,0.06);
+    --green: #4CAF50;
+    --green-bg: #F7FBF4;
+    --green-border: rgba(76,175,80,0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--ivory);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* 현재 버전 = 3.0.3 */
+  .version-label {
+    text-align: center;
+    padding: 20px 0 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--deep-rose);
+    letter-spacing: 2px;
+  }
+  .version-label small {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── 상단 비교 탭 ── */
+  .tab-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    padding: 10px 32px;
+    border: 2px solid var(--deep-rose);
+    background: transparent;
+    color: var(--deep-rose);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn:first-child { border-radius: 12px 0 0 12px; }
+  .tab-btn:last-child { border-radius: 0 12px 12px 0; }
+  .tab-btn.active {
+    background: var(--deep-rose);
+    color: white;
+  }
+
+  /* ── 컨텐츠 영역 (현재 버전) ── */
+  .screen-current {
+    background: var(--ivory);
+    min-height: 100vh;
+  }
+  .screen-current .manage-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen-current .manage-header {
+    background: rgba(255,255,255,0.92);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .screen-current .manage-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+  .screen-current .back-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+  }
+  .screen-current .brand-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--deep-rose);
+  }
+  .screen-current .brand-title em { font-style: italic; }
+  .screen-current .brand-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .screen-current .total-count {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* 본문 영역 */
+  .screen-current .manage-body {
+    flex: 1;
+    padding: 32px 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* 툴바 */
+  .manage-toolbar-card {
+    border-radius: 28px;
+    padding: 22px 24px;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,.75);
+    box-shadow: 0 18px 48px var(--shadow);
+    backdrop-filter: blur(16px);
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) 210px auto;
+    gap: 14px;
+    align-items: end;
+  }
+  .toolbar-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .manage-search-input,
+  .manage-sort-select {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(139,74,56,0.12);
+    background: rgba(255,255,255,0.96);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+  }
+  .manage-filter-wrap {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .manage-filter-btn {
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(243,237,227,0.72);
+    color: var(--text-soft);
+    border: 1px solid transparent;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .manage-filter-btn.active,
+  .manage-filter-btn:hover {
+    background: linear-gradient(135deg, #8b4a38, #c5826a);
+    color: #fff;
+  }
+
+  /* 섹션 카드 */
+  .manage-section-card {
+    border-radius: 28px;
+    padding: 22px 24px;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,.75);
+    box-shadow: 0 18px 48px var(--shadow);
+    backdrop-filter: blur(16px);
+  }
+  .manage-section-card + .manage-section-card {
+    margin-top: 18px;
+  }
+  .manage-section-card.featured {
+    background: linear-gradient(180deg, rgba(247,251,244,0.98), rgba(255,255,255,0.98));
+  }
+  .manage-section-card.muted {
+    background: linear-gradient(180deg, rgba(248,245,240,0.95), rgba(255,255,255,0.92));
+  }
+  .manage-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .manage-section-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .manage-section-dot.green { background: var(--green); animation: pulseDot 1.5s infinite; }
+  .manage-section-dot.gold { background: var(--gold); }
+  .manage-section-dot.gray { background: #9E9E9E; }
+  .manage-section-label {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Noto Sans KR', sans-serif;
+    line-height: 1.4;
+  }
+  .manage-count-chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: rgba(139,74,56,0.06);
+    color: var(--deep-rose);
+  }
+  .panel-link-btn {
+    margin-left: auto;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+  }
+
+  /* 오늘의 결혼식 그리드 */
+  .manage-today-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .today-card {
+    border-radius: 22px;
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 12px 24px rgba(76,175,80,.06);
+  }
+  .today-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(44,31,26,0.1);
+  }
+  .today-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .today-card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    color: var(--deep-rose);
+    line-height: 1.05;
+    margin-bottom: 4px;
+  }
+  .today-card-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .today-card-dday {
+    font-size: 12px;
+    font-weight: 700;
+    background: white;
+    padding: 7px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .today-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .today-stat-box {
+    padding: 14px 12px;
+    border-radius: 16px;
+    background: white;
+    border: 1px solid rgba(139,74,56,.08);
+    text-align: center;
+  }
+  .today-stat-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--deep-rose);
+  }
+  .today-stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .today-card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .today-card-actions button {
+    flex: 1;
+    min-width: 0;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn-outline {
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--text-soft);
+  }
+  .btn-primary {
+    border: none;
+    background: var(--deep-rose);
+    color: white;
+  }
+
+  /* 리스트 스택 */
+  .manage-list-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .manage-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: white;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .manage-row:hover {
+    border-color: var(--rose);
+    box-shadow: 0 4px 12px rgba(139,74,56,0.06);
+  }
+  .manage-row-main { flex: 1; min-width: 0; }
+  .manage-row-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .manage-row-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .manage-row-stats {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .manage-stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    background: var(--cream);
+    border-radius: 8px;
+  }
+  .manage-stat-chip strong { color: var(--text-soft); }
+  .manage-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .manage-row-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-soft);
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+  .manage-row-btn:hover { background: var(--cream); }
+  .manage-row-btn.primary {
+    background: var(--deep-rose);
+    color: white;
+    border-color: var(--deep-rose);
+  }
+  .manage-row-btn.danger { color: #b05a5a; border-color: rgba(176,90,90,0.2); }
+
+  .manage-collapsible-wrap {
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .manage-collapsible-wrap.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
+
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── ========== 개선 버전 ========== ── */
+  .screen-new {
+    background: var(--ivory);
+    min-height: 100vh;
+    display: none;
+  }
+  .screen-new.show { display: block; }
+
+  .new-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* 헤더 */
+  .new-header {
+    width: 100%;
+    max-width: 1280px;
+    background: rgba(255,255,255,0.92);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .new-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .new-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--deep-rose);
+  }
+  .new-brand small {
+    display: block;
+    font-size: 10px;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-top: 1px;
+  }
+  .new-total {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--cream);
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* 본문 — max-width 제한 */
+  .new-body {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 40px 60px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* 툴바 (개선) */
+  .new-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,.75);
+    border-radius: 20px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 16px var(--shadow);
+    backdrop-filter: blur(12px);
+  }
+  .new-search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .new-search-wrap .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .new-search-input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(248,245,240,0.7);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .new-search-input:focus {
+    border-color: var(--rose);
+    background: white;
+  }
+  .new-sort-select {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(248,245,240,0.7);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+  }
+  .new-filter-wrap {
+    display: flex;
+    gap: 4px;
+    background: var(--cream);
+    border-radius: 10px;
+    padding: 3px;
+  }
+  .new-filter-btn {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+  .new-filter-btn.active {
+    background: white;
+    color: var(--deep-rose);
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+
+  /* ── 통일된 카드 디자인 ── */
+  .new-section + .new-section { margin-top: 8px; }
+  .new-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .new-section-head .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .new-section-head .dot.green { background: var(--green); }
+  .new-section-head .dot.gold { background: var(--gold); }
+  .new-section-head .dot.gray { background: #9E9E9E; }
+  .new-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-soft);
+    letter-spacing: 0.5px;
+  }
+  .new-count-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+  .new-section-toggle {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+
+  /* ── 통일된 사이트 카드 (오늘/예정/지난 동일) ── */
+  .site-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .site-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: white;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .site-card:hover {
+    border-color: var(--rose);
+    box-shadow: 0 4px 16px rgba(139,74,56,0.06);
+  }
+  .site-card.today-highlight {
+    border-left: 4px solid var(--green);
+    background: linear-gradient(135deg, rgba(247,251,244,0.6), white);
+  }
+  .site-card .card-left {
+    flex: 1;
+    min-width: 0;
+  }
+  .site-card .card-couple {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    color: var(--deep-rose);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .site-card .card-couple .heart {
+    display: inline-block;
+    margin: 0 2px;
+    font-size: 14px;
+  }
+  .site-card .card-info {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .site-card .card-dday {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--cream);
+    color: var(--text-soft);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .site-card .card-dday.today {
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    color: white;
+  }
+  .site-card .card-stats {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .site-card .stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    background: var(--cream);
+    border-radius: 8px;
+  }
+  .site-card .stat-chip strong { color: var(--text-soft); }
+
+  /* 액션 버튼 — hover 시에만 표시 */
+  .site-card .card-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .site-card:hover .card-actions { opacity: 1; }
+  .site-card .action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: all 0.15s;
+    color: var(--text-muted);
+  }
+  .site-card .action-btn:hover {
+    background: var(--cream);
+    border-color: var(--rose);
+    color: var(--deep-rose);
+  }
+  .site-card .action-btn.primary {
+    background: var(--deep-rose);
+    color: white;
+    border-color: var(--deep-rose);
+  }
+  .site-card .action-btn.primary:hover {
+    background: #7A3E2E;
+  }
+
+  /* 지난 행사 접기 */
+  .collapsible-body {
+    overflow: hidden;
+    transition: max-height 0.3s;
+  }
+  .collapsible-body.hidden { max-height: 0; }
+
+  /* ── 비교 메모 ── */
+  .diff-note {
+    background: #FFF8E1;
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 12px 18px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--text-soft);
+    line-height: 1.6;
+  }
+  .diff-note strong { color: var(--deep-rose); }
+
+  /* ── 현재 화면 숨김 토글 ── */
+  .screen-current.hidden { display: none; }
+
+  @media (max-width: 768px) {
+    .screen-current .manage-body { padding: 20px 16px; }
+    .new-body { padding: 20px 16px; }
+    .new-header, .screen-current .manage-header { padding: 12px 16px; }
+    .manage-toolbar-card { grid-template-columns: 1fr; gap: 12px; }
+    .manage-today-grid { grid-template-columns: 1fr; }
+    .new-toolbar { flex-direction: column; align-items: stretch; }
+    .new-filter-wrap { justify-content: center; }
+    .site-card .card-actions { opacity: 1; }
+    .site-card { flex-wrap: wrap; }
+    .site-card .card-stats { order: 3; }
+    .site-card .card-actions { order: 4; width: 100%; justify-content: flex-end; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="version-label">
+  📋 사이트 관리 화면 — UI 개선预览
+  <small>⬅️ 왼쪽: 현재(3.0.3) &nbsp;|&nbsp; ➡️ 오른쪽: 개선안</small>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showVersion('current')">← 현재 버전</button>
+  <button class="tab-btn" onclick="showVersion('both')">⚖️ 비교</button>
+  <button class="tab-btn" onclick="showVersion('new')">개선안 →</button>
+</div>
+
+<!-- ============================================ -->
+<!-- 현재 버전 (3.0.3) -->
+<!-- ============================================ -->
+<div id="ver-current" class="screen-current show">
+<div class="manage-shell">
+
+  <!-- 헤더 -->
+  <div class="manage-header">
+    <div class="manage-header-left">
+      <button class="back-btn">← 홈</button>
+      <div>
+        <div class="brand-title"><em>A Moment</em> That Lasts</div>
+        <div class="brand-sub">사이트 관리</div>
+      </div>
+    </div>
+    <div class="total-count">총 22건</div>
+  </div>
+
+  <!-- 본문 -->
+  <div class="manage-body">
+
+    <!-- 툴바 -->
+    <div class="manage-toolbar-card">
+      <div>
+        <label class="toolbar-label" for="s1">검색</label>
+        <input id="s1" class="manage-search-input" type="text" placeholder="커플명, 행사코드, 날짜로 찾기">
+      </div>
+      <div>
+        <label class="toolbar-label" for="sort1">정렬</label>
+        <select id="sort1" class="manage-sort-select">
+          <option>예식일 최신순</option>
+          <option>예식일 오래된순</option>
+          <option>생성일 최신순</option>
+          <option>사진 많은순</option>
+          <option>하객 많은순</option>
+        </select>
+      </div>
+      <div class="manage-filter-wrap">
+        <button class="manage-filter-btn active">전체</button>
+        <button class="manage-filter-btn">오늘</button>
+        <button class="manage-filter-btn">예정</button>
+        <button class="manage-filter-btn">지난 행사</button>
+      </div>
+    </div>
+
+    <!-- 오늘의 결혼식 -->
+    <div class="manage-section-card featured">
+      <div class="manage-section-head">
+        <div class="manage-section-dot green"></div>
+        <div class="manage-section-label" style="color:#2E7D32;">오늘의 결혼식</div>
+        <div class="manage-count-chip">2건</div>
+      </div>
+      <div class="manage-today-grid">
+        <div class="today-card" style="background:#F7FBF4; border:1px solid rgba(76,175,80,.18);">
+          <div class="today-card-top">
+            <div>
+              <div class="today-card-name">asdas ♥ asdas</div>
+              <div class="today-card-meta">2026-05-31 · 6d503be4</div>
+            </div>
+            <div class="today-card-dday" style="color:#4CAF50; border:1px solid rgba(76,175,80,.2);">D-DAY</div>
+          </div>
+          <div class="today-card-stats">
+            <div class="today-stat-box"><div class="today-stat-num">0</div><div class="today-stat-label">참여 하객</div></div>
+            <div class="today-stat-box"><div class="today-stat-num">0</div><div class="today-stat-label">업로드 사진</div></div>
+            <div class="today-stat-box"><div class="today-stat-num">🟢</div><div class="today-stat-label">입장 가능</div></div>
+          </div>
+          <div class="today-card-actions">
+            <button class="btn-outline">QR 보기</button>
+            <button class="btn-outline">링크 복사</button>
+            <button class="btn-primary">하객 화면</button>
+          </div>
+        </div>
+        <div class="today-card" style="background:#F7FBF4; border:1px solid rgba(76,175,80,.18);">
+          <div class="today-card-top">
+            <div>
+              <div class="today-card-name">asdas ♥ asdas</div>
+              <div class="today-card-meta">2026-05-31 · ab42011f</div>
+            </div>
+            <div class="today-card-dday" style="color:#4CAF50; border:1px solid rgba(76,175,80,.2);">D-DAY</div>
+          </div>
+          <div class="today-card-stats">
+            <div class="today-stat-box"><div class="today-stat-num">0</div><div class="today-stat-label">참여 하객</div></div>
+            <div class="today-stat-box"><div class="today-stat-num">0</div><div class="today-stat-label">업로드 사진</div></div>
+            <div class="today-stat-box"><div class="today-stat-num">🟢</div><div class="today-stat-label">입장 가능</div></div>
+          </div>
+          <div class="today-card-actions">
+            <button class="btn-outline">QR 보기</button>
+            <button class="btn-outline">링크 복사</button>
+            <button class="btn-primary">하객 화면</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 예정된 결혼식 -->
+    <div class="manage-section-card">
+      <div class="manage-section-head">
+        <div class="manage-section-dot gold"></div>
+        <div class="manage-section-label" style="color:var(--dark-gold);">예정된 결혼식</div>
+        <div class="manage-count-chip">5건</div>
+      </div>
+      <div class="manage-list-stack">
+        <div class="manage-row">
+          <div class="manage-row-main">
+            <div class="manage-row-title">황민준 ♥ 서유진</div>
+            <div class="manage-row-meta"><span>2026-06-29</span><span>D-29</span><span>8ab3c</span></div>
+          </div>
+          <div class="manage-row-stats">
+            <div class="manage-stat-chip"><strong>1</strong><span>하객</span></div>
+            <div class="manage-stat-chip"><strong>0</strong><span>사진</span></div>
+          </div>
+          <div class="manage-row-actions">
+            <button class="manage-row-btn">QR</button>
+            <button class="manage-row-btn">링크</button>
+            <button class="manage-row-btn primary">하객 화면</button>
+          </div>
+        </div>
+        <div class="manage-row">
+          <div class="manage-row-main">
+            <div class="manage-row-title">장도현 ♥ 나예원</div>
+            <div class="manage-row-meta"><span>2026-06-20</span><span>D-20</span><span>fa3e1</span></div>
+          </div>
+          <div class="manage-row-stats">
+            <div class="manage-stat-chip"><strong>0</strong><span>하객</span></div>
+            <div class="manage-stat-chip"><strong>0</strong><span>사진</span></div>
+          </div>
+          <div class="manage-row-actions">
+            <button class="manage-row-btn">QR</button>
+            <button class="manage-row-btn">링크</button>
+            <button class="manage-row-btn primary">하객 화면</button>
+          </div>
+        </div>
+        <div class="manage-row">
+          <div class="manage-row-main">
+            <div class="manage-row-title">TestGroom ♥ TestBride</div>
+            <div class="manage-row-meta"><span>2026-06-15</span><span>D-15</span><span>a1b2c</span></div>
+          </div>
+          <div class="manage-row-stats">
+            <div class="manage-stat-chip"><strong>0</strong><span>하객</span></div>
+            <div class="manage-stat-chip"><strong>0</strong><span>사진</span></div>
+          </div>
+          <div class="manage-row-actions">
+            <button class="manage-row-btn">QR</button>
+            <button class="manage-row-btn">링크</button>
+            <button class="manage-row-btn primary">하객 화면</button>
+          </div>
+        </div>
+        <div class="manage-row">
+          <div class="manage-row-main">
+            <div class="manage-row-title">안성민 ♥ 백지우</div>
+            <div class="manage-row-meta"><span>2026-06-11</span><span>D-11</span><span>c4d5e</span></div>
+          </div>
+          <div class="manage-row-stats">
+            <div class="manage-stat-chip"><strong>1</strong><span>하객</span></div>
+            <div class="manage-stat-chip"><strong>1</strong><span>사진</span></div>
+          </div>
+          <div class="manage-row-actions">
+            <button class="manage-row-btn">QR</button>
+            <button class="manage-row-btn">링크</button>
+            <button class="manage-row-btn primary">하객 화면</button>
+          </div>
+        </div>
+        <div class="manage-row">
+          <div class="manage-row-main">
+            <div class="manage-row-title">권영재 ♥ 류하린</div>
+            <div class="manage-row-meta"><span>2026-06-02</span><span>D-2</span><span>f6g7h</span></div>
+          </div>
+          <div class="manage-row-stats">
+            <div class="manage-stat-chip"><strong>3</strong><span>하객</span></div>
+            <div class="manage-stat-chip"><strong>2</strong><span>사진</span></div>
+          </div>
+          <div class="manage-row-actions">
+            <button class="manage-row-btn">QR</button>
+            <button class="manage-row-btn">링크</button>
+            <button class="manage-row-btn primary">하객 화면</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 지난 결혼식 -->
+    <div class="manage-section-card muted">
+      <div class="manage-section-head">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="manage-section-dot gray"></div>
+          <div class="manage-section-label" style="color:var(--text-muted);">지난 결혼식</div>
+          <div class="manage-count-chip">15건</div>
+        </div>
+        <button class="panel-link-btn" onclick="togglePast()">펼치기</button>
+      </div>
+      <div id="past-list-wrap" class="manage-collapsible-wrap collapsed">
+        <div class="manage-list-stack" style="margin-top:12px;">
+          <div class="manage-row">
+            <div class="manage-row-main">
+              <div class="manage-row-title">진승현 ♥ 진순</div>
+              <div class="manage-row-meta"><span>2026-05-23</span><span>D-8</span><span>x1y2z</span></div>
+            </div>
+            <div class="manage-row-stats">
+              <div class="manage-stat-chip"><strong>0</strong><span>하객</span></div>
+              <div class="manage-stat-chip"><strong>0</strong><span>사진</span></div>
+            </div>
+            <div class="manage-row-actions">
+              <button class="manage-row-btn">QR</button>
+              <button class="manage-row-btn">링크</button>
+              <button class="manage-row-btn primary">하객 화면</button>
+              <button class="manage-row-btn danger">숨기기</button>
+            </div>
+          </div>
+          <div class="manage-row">
+            <div class="manage-row-main">
+              <div class="manage-row-title">rewff ♥ rerte</div>
+              <div class="manage-row-meta"><span>2026-05-22</span><span>D-9</span><span>u4v5w</span></div>
+            </div>
+            <div class="manage-row-stats">
+              <div class="manage-stat-chip"><strong>0</strong><span>하객</span></div>
+              <div class="manage-stat-chip"><strong>1</strong><span>사진</span></div>
+            </div>
+            <div class="manage-row-actions">
+              <button class="manage-row-btn">QR</button>
+              <button class="manage-row-btn">링크</button>
+              <button class="manage-row-btn primary">하객 화면</button>
+              <button class="manage-row-btn danger">숨기기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- 개선 버전 -->
+<!-- ============================================ -->
+<div id="ver-new" class="screen-new">
+<div class="new-shell">
+
+  <!-- 헤더 (심플) -->
+  <div class="new-header">
+    <div class="new-header-left">
+      <button class="back-btn" style="border:none;background:transparent;cursor:pointer;color:var(--text-muted);font-size:13px;font-family:'Noto Sans KR',sans-serif;font-weight:600;">← 홈</button>
+      <div class="new-brand">
+        A Moment That Lasts
+        <small>사이트 관리</small>
+      </div>
+    </div>
+    <div class="new-total">총 22건</div>
+  </div>
+
+  <!-- 본문 (max-width 제한) -->
+  <div class="new-body">
+
+    <!-- 개선 포인트 메모 -->
+    <div class="diff-note">
+      <strong>📌 개선 포인트</strong><br>
+      ① <strong>max-width: 1280px</strong> — PC에서 양옆 공간 적당히 활용<br>
+      ② <strong>통일된 카드 스타일</strong> — 오늘/예정/지난 모두 같은 스타일의 카드<br>
+      ③ <strong>액션 버튼 hover 시만 표시</strong> — 평소엔 깔끔하게<br>
+      ④ <strong>정보 계층 정리</strong> — D-Day/통계/메타 정보를 간결하게<br>
+      ⑤ <strong>카드 좌측 그린라인</strong> — 오늘 행사는 녹색 강조라인
+    </div>
+
+    <!-- 툴바 -->
+    <div class="new-toolbar">
+      <div class="new-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="new-search-input" type="text" placeholder="커플명, 행사코드, 날짜로 찾기">
+      </div>
+      <select class="new-sort-select">
+        <option>예식일 최신순</option>
+        <option>예식일 오래된순</option>
+        <option>생성일 최신순</option>
+        <option>사진 많은순</option>
+        <option>하객 많은순</option>
+      </select>
+      <div class="new-filter-wrap">
+        <button class="new-filter-btn active">전체</button>
+        <button class="new-filter-btn">오늘</button>
+        <button class="new-filter-btn">예정</button>
+        <button class="new-filter-btn">지난</button>
+      </div>
+    </div>
+
+    <!-- 오늘의 결혼식 -->
+    <div class="new-section">
+      <div class="new-section-head">
+        <span class="dot green"></span>
+        <span class="new-section-title" style="color:#2E7D32;">오늘의 결혼식</span>
+        <span class="new-count-badge">2건</span>
+      </div>
+      <div class="site-card-list">
+        <div class="site-card today-highlight">
+          <div class="card-left">
+            <div class="card-couple">asdas <span class="heart">♥</span> asdas</div>
+            <div class="card-info">
+              <span>2026-05-31 · 6d503be4</span>
+            </div>
+          </div>
+          <div class="card-dday today">D-DAY</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>0</strong> 하객</div>
+            <div class="stat-chip"><strong>0</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+          </div>
+        </div>
+        <div class="site-card today-highlight">
+          <div class="card-left">
+            <div class="card-couple">asdas <span class="heart">♥</span> asdas</div>
+            <div class="card-info">
+              <span>2026-05-31 · ab42011f</span>
+            </div>
+          </div>
+          <div class="card-dday today">D-DAY</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>0</strong> 하객</div>
+            <div class="stat-chip"><strong>0</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 예정된 결혼식 -->
+    <div class="new-section">
+      <div class="new-section-head">
+        <span class="dot gold"></span>
+        <span class="new-section-title" style="color:var(--dark-gold);">예정된 결혼식</span>
+        <span class="new-count-badge">5건</span>
+      </div>
+      <div class="site-card-list">
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple">황민준 <span class="heart">♥</span> 서유진</div>
+            <div class="card-info">
+              <span>2026-06-29</span>
+              <span>8ab3c</span>
+            </div>
+          </div>
+          <div class="card-dday">D-29</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>1</strong> 하객</div>
+            <div class="stat-chip"><strong>0</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+          </div>
+        </div>
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple">장도현 <span class="heart">♥</span> 나예원</div>
+            <div class="card-info">
+              <span>2026-06-20</span>
+              <span>fa3e1</span>
+            </div>
+          </div>
+          <div class="card-dday">D-20</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>0</strong> 하객</div>
+            <div class="stat-chip"><strong>0</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+          </div>
+        </div>
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple">TestGroom <span class="heart">♥</span> TestBride</div>
+            <div class="card-info">
+              <span>2026-06-15</span>
+              <span>a1b2c</span>
+            </div>
+          </div>
+          <div class="card-dday">D-15</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>0</strong> 하객</div>
+            <div class="stat-chip"><strong>0</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+          </div>
+        </div>
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple">안성민 <span class="heart">♥</span> 백지우</div>
+            <div class="card-info">
+              <span>2026-06-11</span>
+              <span>c4d5e</span>
+            </div>
+          </div>
+          <div class="card-dday">D-11</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>1</strong> 하객</div>
+            <div class="stat-chip"><strong>1</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+          </div>
+        </div>
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple">권영재 <span class="heart">♥</span> 류하린</div>
+            <div class="card-info">
+              <span>2026-06-02</span>
+              <span>f6g7h</span>
+            </div>
+          </div>
+          <div class="card-dday">D-2</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>3</strong> 하객</div>
+            <div class="stat-chip"><strong>2</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 지난 결혼식 -->
+    <div class="new-section">
+      <div class="new-section-head">
+        <span class="dot gray"></span>
+        <span class="new-section-title" style="color:var(--text-muted);">지난 결혼식</span>
+        <span class="new-count-badge">15건</span>
+        <button class="new-section-toggle" onclick="toggleNewPast()">펼치기</button>
+      </div>
+      <div id="new-past-list" class="site-card-list collapsible-body hidden">
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple">진승현 <span class="heart">♥</span> 진순</div>
+            <div class="card-info">
+              <span>2026-05-23</span>
+              <span>x1y2z</span>
+            </div>
+          </div>
+          <div class="card-dday">D+8</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>0</strong> 하객</div>
+            <div class="stat-chip"><strong>0</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+            <button class="action-btn" title="숨기기" style="color:#b05a5a;">🚫</button>
+          </div>
+        </div>
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple">rewff <span class="heart">♥</span> rerte</div>
+            <div class="card-info">
+              <span>2026-05-22</span>
+              <span>u4v5w</span>
+            </div>
+          </div>
+          <div class="card-dday">D+9</div>
+          <div class="card-stats">
+            <div class="stat-chip"><strong>0</strong> 하객</div>
+            <div class="stat-chip"><strong>1</strong> 사진</div>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" title="QR 보기">📱</button>
+            <button class="action-btn" title="링크 복사">🔗</button>
+            <button class="action-btn primary" title="하객 화면">👥</button>
+            <button class="action-btn" title="숨기기" style="color:#b05a5a;">🚫</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+function showVersion(v) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.screen-current, .screen-new').forEach(e => {
+    if (v === 'current' || v === 'new') {
+      e.classList.remove('show');
+      e.style.display = 'none';
+    }
+  });
+  if (v === 'current' || v === 'both') {
+    document.getElementById('ver-current').style.display = 'block';
+    document.getElementById('ver-current').classList.add('show');
+  }
+  if (v === 'new' || v === 'both') {
+    document.getElementById('ver-new').classList.add('show');
+    document.getElementById('ver-new').style.display = 'block';
+  }
+  document.querySelectorAll('.tab-btn')[v === 'current' ? 0 : v === 'both' ? 1 : 2].classList.add('active');
+}
+function togglePast() {
+  const w = document.getElementById('past-list-wrap');
+  w.classList.toggle('collapsed');
+  document.querySelector('.panel-link-btn').textContent = w.classList.contains('collapsed') ? '펼치기' : '접기';
+}
+function toggleNewPast() {
+  const w = document.getElementById('new-past-list');
+  w.classList.toggle('hidden');
+  document.querySelector('.new-section-toggle').textContent = w.classList.contains('hidden') ? '펼치기' : '접기';
+}
+
+// 초기: 오늘/예정/지난 표시
+showVersion('current');
+</script>
+</body>
+</html>
