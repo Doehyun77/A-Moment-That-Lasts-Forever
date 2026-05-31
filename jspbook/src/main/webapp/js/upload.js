@@ -12,12 +12,6 @@ function previewFiles(e) {
   pendingPhotos = [];
   let loaded    = 0;
   const results = [];
-
-  if (files.length === 0) {
-    renderPreviewStrip();
-    return;
-  }
-
   files.forEach((f, idx) => {
     const reader   = new FileReader();
     reader.onload  = ev => {
@@ -51,7 +45,6 @@ function renderPreviewStrip() {
     del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--deep-rose);color:white;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1;';
     del.onclick = () => {
       pendingPhotos.splice(idx, 1);
-      pendingFiles.splice(idx, 1);
       renderPreviewStrip();
     };
     wrap.appendChild(img);

@@ -25,6 +25,10 @@ async function submitAdminCode() {
   const result = await api_adminLogin(input);
   if (result.success) {
     closeAdminModal();
+    // QR 입장 모드: URL의 code를 admin 페이지에 바로 매핑
+    if (currentEventCode) {
+      adminEventCode = currentEventCode;
+    }
     currentScreenName = 'landing';
     showScreen('admin');
     return;
@@ -36,16 +40,29 @@ async function submitAdminCode() {
 }
 
 async function adminLogout() {
+  // URL 파라미터를 제거하기 전에 entry 정보 저장
+  const params = new URLSearchParams(window.location.search);
+  const wasEntryMode = params.get('mode') === 'entry';
+  const entryCode = params.get('code') || adminEventCode || currentEventCode || '';
+
   await api_adminLogout();
   screenHistory = [];
-  currentScreenName = 'operator';
   currentEventCode = '';
   currentEventInfo = null;
   adminEventCode = '';
   posts = [];
+
   if (window.history && window.history.replaceState) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
+
+  // QR 입장 모드였으면 → 해당 QR 입장 화면으로 복귀 (페이지 리로드)
+  if (wasEntryMode && entryCode) {
+    window.location.href = window.location.pathname + '?mode=entry&code=' + entryCode;
+    return;
+  }
+
+  // 일반 로그아웃 — 운영자 세션 있으면 콘솔, 없으면 로그인 화면
   const groomEl = document.getElementById('groom-name');
   const brideEl = document.getElementById('bride-name');
   if (groomEl) groomEl.textContent = '권영준';
@@ -58,8 +75,22 @@ async function adminLogout() {
     b.style.display = 'none';
     b.classList.remove('is-active', 'slide-out-left', 'slide-out-right', 'slide-from-right', 'slide-from-left');
   });
-  document.getElementById('screen-operator').classList.add('active');
-  renderOperatorDashboard();
+
+  try {
+    const status = await api_operatorStatus();
+    if (status && status.authenticated) {
+      currentScreenName = 'operator';
+      document.getElementById('screen-operator').classList.add('active');
+      renderOperatorDashboard();
+    } else {
+      currentScreenName = 'login';
+      document.getElementById('screen-login').classList.add('active');
+    }
+  } catch (e) {
+    currentScreenName = 'login';
+    document.getElementById('screen-login').classList.add('active');
+  }
+
   showToast('로그아웃 되었습니다');
 }
 

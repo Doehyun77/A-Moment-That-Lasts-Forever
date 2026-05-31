@@ -288,7 +288,7 @@ function renderTodaySiteList(containerId, sites, status) {
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px;">
         <div>
-          <div style="font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--text); line-height:1.05; margin-bottom:4px;">${s.groom} ♥ ${s.bride}</div>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--deep-rose); line-height:1.05; margin-bottom:4px;">${s.groom} ♥ ${s.bride}</div>
           <div style="font-size:12px; color:var(--text-muted);">${s.date} · ${s.eventCode}</div>
         </div>
         <div style="font-size:12px; font-weight:700; color:${statusColor}; background:white; padding:7px 12px; border-radius:999px; border:1px solid rgba(76,175,80,.2);">${getDday(s.date)}</div>
@@ -692,20 +692,22 @@ function opStatusLabel(status) {
 }
 
 async function renderOperatorDashboard() {
-  const totalSitesEl = document.getElementById('op-stat-total-sites');
+  const totalSitesEl  = document.getElementById('op-stat-total-sites');
   const futureSitesEl = document.getElementById('op-stat-future-sites');
   const totalPhotosEl = document.getElementById('op-stat-total-photos');
   const totalGuestsEl = document.getElementById('op-stat-total-guests');
-  const recentBodyEl = document.getElementById('op-recent-events-body');
-  const heroSummaryEl = document.getElementById('op-hero-summary');
-  const systemTitleEl = document.getElementById('op-system-title');
-  const systemApiEl = document.getElementById('op-system-api');
-  const systemDbEl = document.getElementById('op-system-db');
-  const systemDashboardEl = document.getElementById('op-system-dashboard');
+  const recentBodyEl  = document.getElementById('op-recent-events-body');
+  const systemApiEl   = document.getElementById('op-system-api');
+  const systemDbEl    = document.getElementById('op-system-db');
+  const systemDashEl  = document.getElementById('op-system-dashboard');
+  // 티커용 span
+  const tickerSitesEl  = document.getElementById('op-stat-total-sites-t');
+  const tickerPhotosEl = document.getElementById('op-stat-total-photos-t');
+  const tickerGuestsEl = document.getElementById('op-stat-total-guests-t');
 
   if (!totalSitesEl || !recentBodyEl) return;
 
-  totalSitesEl.textContent = '-';
+  totalSitesEl.textContent  = '-';
   futureSitesEl.textContent = '-';
   totalPhotosEl.textContent = '-';
   totalGuestsEl.textContent = '-';
@@ -724,51 +726,144 @@ async function renderOperatorDashboard() {
       };
     });
 
-    const futureCount = normalized.filter(e => e.status === 'future').length;
-    const totalPhotos = normalized.reduce((sum, e) => sum + (e.photoCount || 0), 0);
-    const totalGuests = normalized.reduce((sum, e) => sum + (e.guestCount || 0), 0);
+    const futureCount  = normalized.filter(e => e.status === 'future').length;
+    const totalPhotos  = normalized.reduce((sum, e) => sum + (e.photoCount || 0), 0);
+    const totalGuests  = normalized.reduce((sum, e) => sum + (e.guestCount || 0), 0);
     const recentEvents = normalized
       .slice()
       .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
-      .slice(0, 3);
+      .slice(0, 5);
 
-    totalSitesEl.textContent = String(normalized.length);
+    totalSitesEl.textContent  = String(normalized.length);
     futureSitesEl.textContent = String(futureCount);
     totalPhotosEl.textContent = String(totalPhotos);
     totalGuestsEl.textContent = String(totalGuests);
 
-    if (heroSummaryEl) {
-      heroSummaryEl.textContent = '현재 생성된 웨딩 사이트 ' + normalized.length + '건, 누적 업로드 사진 ' + totalPhotos + '장, 참여 하객 ' + totalGuests + '명을 기준으로 운영 현황을 한눈에 확인할 수 있습니다.';
-    }
+    // 티커 업데이트 — 원본 + 복제본 모두 갱신 (class 셀렉터로)
+    document.querySelectorAll('.ts-sites').forEach(el => { el.textContent = normalized.length; });
+    document.querySelectorAll('.ts-photos').forEach(el => { el.textContent = totalPhotos; });
+    document.querySelectorAll('.ts-guests').forEach(el => { el.textContent = totalGuests; });
 
-    if (systemTitleEl) systemTitleEl.textContent = '정상 운영';
-    if (systemApiEl) systemApiEl.textContent = 'ONLINE';
-    if (systemDbEl) systemDbEl.textContent = 'CONNECTED';
-    if (systemDashboardEl) systemDashboardEl.textContent = normalized.length > 0 ? 'LIVE DATA' : 'READY';
+    // 시스템 상태 업데이트
+    if (systemApiEl)   { systemApiEl.textContent  = 'ONLINE';    systemApiEl.style.color = '#4CAF50'; }
+    if (systemDbEl)    { systemDbEl.textContent   = 'CONNECTED'; systemDbEl.style.color  = '#4CAF50'; }
+    if (systemDashEl)  { systemDashEl.textContent = normalized.length > 0 ? 'LIVE DATA' : 'READY'; systemDashEl.style.color = '#4CAF50'; }
+
+    // 티커의 이모지도 녹색으로 (innerHTML 사용 → inner span 유지)
+    document.querySelectorAll('.ticker-item').forEach(el => {
+      el.innerHTML = el.innerHTML.replace(/🟡/g, '🟢');
+    });
 
     if (recentEvents.length === 0) {
       recentBodyEl.innerHTML = '<tr><td colspan="4" style="padding:18px 0; color:rgba(62,41,34,.5);">아직 생성된 사이트가 없어요</td></tr>';
-      return;
+    } else {
+      recentBodyEl.innerHTML = recentEvents.map(event => {
+        const status = event.status;
+        const date   = event.date || '-';
+        return '<tr>' +
+          '<td><div class="op-event-name">' + (event.groomName || event.groom || '') + ' ♥ ' + (event.brideName || event.bride || '') + '</div></td>' +
+          '<td>' + date + '</td>' +
+          '<td>' + (event.photoCount || 0) + '장</td>' +
+          '<td><span class="op-tag ' + opStatusClass(status) + '">' + opStatusLabel(status) + '</span></td>' +
+        '</tr>';
+      }).join('');
     }
 
-    recentBodyEl.innerHTML = recentEvents.map(event => {
-      const status = event.status;
-      const date = event.date || '-';
-      return '<tr>' +
-        '<td><div class="op-event-name">' + event.groomName + ' ♥ ' + event.brideName + '</div></td>' +
-        '<td>' + date + '</td>' +
-        '<td>' + (event.photoCount || 0) + '장</td>' +
-        '<td><span class="op-tag ' + opStatusClass(status) + '">' + opStatusLabel(status) + '</span></td>' +
-      '</tr>';
-    }).join('');
+    // ── 꺾은선 차트 렌더링 ──
+    renderMonthlyChart(normalized);
+
   } catch (e) {
     console.error('Failed to render operator dashboard:', e);
-    if (systemTitleEl) systemTitleEl.textContent = '확인 필요';
-    if (systemApiEl) systemApiEl.textContent = 'ERROR';
-    if (systemDbEl) systemDbEl.textContent = 'ERROR';
-    if (systemDashboardEl) systemDashboardEl.textContent = 'ERROR';
+    if (systemApiEl)  { systemApiEl.textContent  = 'ERROR'; systemApiEl.style.color  = '#b05a5a'; }
+    if (systemDbEl)   { systemDbEl.textContent   = 'ERROR'; systemDbEl.style.color   = '#b05a5a'; }
+    if (systemDashEl) { systemDashEl.textContent = 'ERROR'; systemDashEl.style.color = '#b05a5a'; }
     recentBodyEl.innerHTML = '<tr><td colspan="4" style="padding:18px 0; color:#b05a5a;">이벤트 데이터를 불러오지 못했어요</td></tr>';
+    renderMonthlyChart([]);
   }
+}
+
+function renderMonthlyChart(events) {
+  const wrap = document.getElementById('chart-body');
+  if (!wrap) return;
+
+  // 현재 연도 1~12월 집계 (데이터 없으면 0)
+  const now = new Date();
+  const year = now.getFullYear();
+  const counts = Array.from({ length: 12 }, () => 0);
+
+  (events || []).forEach(e => {
+    const raw = e.weddingDate || e.createdAt || '';
+    if (!raw) return;
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return;
+    if (d.getFullYear() !== year) return;
+    counts[d.getMonth()] += 1;
+  });
+
+  const maxVal = Math.max(...counts, 1);
+  const MONTH_LABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+  // ── 고정 좌표계 ──
+  // width/height 속성 없이 viewBox + style="width:100%" 만 사용
+  // → SVG가 항상 컨테이너를 채우고 절대 넘치지 않음
+  const W = 960, H = 145;
+  const PAD_L = 30, PAD_R = 14, PAD_T = 22, PAD_B = 22;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
+  const step   = chartW / 11; // 12포인트, 11구간
+
+  const pts = counts.map((v, i) => ({
+    x: PAD_L + i * step,
+    y: PAD_T + chartH - (v / maxVal) * chartH,
+    v
+  }));
+
+  const linePoints = pts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+
+  const areaPoints = [PAD_L.toFixed(1) + ',' + (PAD_T + chartH).toFixed(1)]
+    .concat(pts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)))
+    .concat([(PAD_L + chartW).toFixed(1) + ',' + (PAD_T + chartH).toFixed(1)])
+    .join(' ');
+
+  const yLines = [0, 0.5, 1].map(ratio => {
+    const y     = (PAD_T + chartH - ratio * chartH).toFixed(1);
+    const label = Math.round(ratio * maxVal);
+    return '<line x1="' + PAD_L + '" y1="' + y + '" x2="' + (W - PAD_R) + '" y2="' + y +
+      '" stroke="rgba(139,74,56,0.07)" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="' + (PAD_L - 5) + '" y="' + (parseFloat(y) + 4) +
+      '" text-anchor="end" font-size="10" fill="rgba(62,41,34,0.35)">' + label + '</text>';
+  }).join('');
+
+  const dots = pts.map(p => {
+    const hasData = p.v > 0;
+    const label = hasData
+      ? '<text x="' + p.x.toFixed(1) + '" y="' + (p.y - 7).toFixed(1) +
+        '" text-anchor="middle" font-size="10" font-weight="700" fill="#8B4A38">' + p.v + '</text>'
+      : '';
+    return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) +
+      '" r="' + (hasData ? 4 : 2.5) + '" fill="' + (hasData ? '#8B4A38' : 'rgba(197,130,106,0.3)') +
+      '" stroke="white" stroke-width="1.5"/>' + label;
+  }).join('');
+
+  const xLabels = pts.map((p, i) =>
+    '<text x="' + p.x.toFixed(1) + '" y="' + (H - 5) +
+    '" text-anchor="middle" font-size="10" fill="rgba(62,41,34,0.48)">' + MONTH_LABELS[i] + '</text>'
+  ).join('');
+
+  // width/height 속성 제거 → CSS width:100% 만으로 크기 결정
+  wrap.innerHTML =
+    '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs>' +
+        '<linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#C5826A" stop-opacity="0.15"/>' +
+          '<stop offset="100%" stop-color="#C5826A" stop-opacity="0"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      yLines +
+      '<polygon points="' + areaPoints + '" fill="url(#lineAreaGrad)"/>' +
+      '<polyline points="' + linePoints + '" fill="none" stroke="#8B4A38" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      dots + xLabels +
+    '</svg>';
 }
 
 const DEFAULT_TIMETABLE_ITEMS = [
@@ -865,6 +960,19 @@ async function initApp() {
   // URL에 mode=entry 파라미터가 있으면 qr.js가 처리하므로 여기서는 건너뜀
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'entry') return;
+
+  // 티커 무한 스크롤을 위해 내용 복제 (복사본 ID 제거로 duplicate-ID 방지)
+  const tickerInner = document.getElementById('status-ticker-inner');
+  if (tickerInner) {
+    const originalChildCount = tickerInner.children.length;
+    tickerInner.innerHTML += tickerInner.innerHTML;
+    // 뒤쪽 복사본의 모든 ID 속성 제거 (getElementById 오동작 방지)
+    const allChildren = Array.from(tickerInner.children);
+    for (let i = originalChildCount; i < allChildren.length; i++) {
+      if (allChildren[i].id) allChildren[i].removeAttribute('id');
+      allChildren[i].querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    }
+  }
 
   const operatorScreen = document.getElementById('screen-operator');
   if (operatorScreen && operatorScreen.classList.contains('active')) {
