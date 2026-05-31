@@ -136,13 +136,7 @@ function togglePastSection(forceOpen) {
 function syncPastSection() {
   const wrap = document.getElementById('past-list-wrap');
   const toggle = document.getElementById('manage-past-toggle');
-  if (wrap) {
-    if (managePastCollapsed) {
-      wrap.classList.add('hidden');
-    } else {
-      wrap.classList.remove('hidden');
-    }
-  }
+  if (wrap) wrap.style.display = managePastCollapsed ? 'none' : 'block';
   if (toggle) toggle.textContent = managePastCollapsed ? '펼치기' : '접기';
 }
 
@@ -261,12 +255,12 @@ async function renderManageScreen() {
 
   updateManageSummary(allItems, filteredItems, today, future, past);
   applyManageSectionVisibility(today, future, past);
-  renderSiteCardList('today-list', today, 'today');
-  renderSiteCardList('future-list', future, 'future');
-  renderSiteCardList('past-list', past, 'past');
+  renderTodaySiteList('today-list', today, 'today');
+  renderCompactSiteList('future-list', future, 'future');
+  renderCompactSiteList('past-list', past, 'past');
 }
 
-function renderSiteCardList(containerId, sites, status) {
+function renderTodaySiteList(containerId, sites, status) {
   const container = document.getElementById(containerId);
   if (!container) return;
   if (!sites.length) {
@@ -275,31 +269,39 @@ function renderSiteCardList(containerId, sites, status) {
   }
   container.innerHTML = '';
   sites.forEach((s) => {
-    const isToday = status === 'today';
-    const dday = getDday(s.date);
-    const highlight = isToday ? 'today-highlight' : '';
+    const statusColor = '#4CAF50';
+    const bgColor = '#F7FBF4';
+    const statusIcon = '🟢';
+    const statusText = '입장 가능';
 
     const card = document.createElement('div');
-    card.className = `site-card ${highlight}`;
+    card.style.cssText = `background:${bgColor}; border:1px solid rgba(76,175,80,.18); border-radius:22px; padding:22px; cursor:pointer; transition:all 0.2s; box-shadow:0 12px 24px rgba(76,175,80,.06);`;
+    card.onmouseover = () => {
+      card.style.transform = 'translateY(-2px)';
+      card.style.boxShadow = '0 16px 30px rgba(44,31,26,0.1)';
+    };
+    card.onmouseout = () => {
+      card.style.transform = '';
+      card.style.boxShadow = '0 12px 24px rgba(76,175,80,.06)';
+    };
     card.onclick = () => openSiteManagePreview(s, status);
     card.innerHTML = `
-      <div class="card-left">
-        <div class="card-couple">${s.groom} <span class="heart">♥</span> ${s.bride}</div>
-        <div class="card-info">
-          <span>${s.date}</span>
-          ${s.eventCode ? `<span>${s.eventCode}</span>` : ''}
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px;">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--deep-rose); line-height:1.05; margin-bottom:4px;">${s.groom} ♥ ${s.bride}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${s.date} · ${s.eventCode}</div>
         </div>
+        <div style="font-size:12px; font-weight:700; color:${statusColor}; background:white; padding:7px 12px; border-radius:999px; border:1px solid rgba(76,175,80,.2);">${getDday(s.date)}</div>
       </div>
-      <div class="card-dday${isToday ? ' today' : ''}">${dday}</div>
-      <div class="card-stats">
-        <div class="stat-chip"><strong>${s.guestCount || 0}</strong> 하객</div>
-        <div class="stat-chip"><strong>${s.photoCount || 0}</strong> 사진</div>
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:16px;">
+        <div style="padding:14px 12px; border-radius:16px; background:white; border:1px solid rgba(139,74,56,.08); text-align:center;"><div style="font-size:18px; font-weight:800; color:var(--deep-rose);">${s.guestCount || 0}</div><div style="font-size:10px; color:var(--text-muted); margin-top:4px;">참여 하객</div></div>
+        <div style="padding:14px 12px; border-radius:16px; background:white; border:1px solid rgba(139,74,56,.08); text-align:center;"><div style="font-size:18px; font-weight:800; color:var(--deep-rose);">${s.photoCount || 0}</div><div style="font-size:10px; color:var(--text-muted); margin-top:4px;">업로드 사진</div></div>
+        <div style="padding:14px 12px; border-radius:16px; background:white; border:1px solid rgba(139,74,56,.08); text-align:center;"><div style="font-size:18px; font-weight:800; color:var(--deep-rose);">${statusIcon}</div><div style="font-size:10px; color:var(--text-muted); margin-top:4px;">${statusText}</div></div>
       </div>
-      <div class="card-actions">
-        <button class="action-btn" data-role="qr" title="QR 보기">📱</button>
-        <button class="action-btn" data-role="copy" title="링크 복사">🔗</button>
-        <button class="action-btn primary" data-role="open" title="하객 화면">👥</button>
-        ${status === 'past' ? '<button class="action-btn" data-role="hide" title="숨기기" style="color:#b05a5a;">🚫</button>' : ''}
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button data-role="qr" style="flex:1; min-width:0; height:42px; border-radius:12px; border:1px solid var(--border); background:white; color:var(--text-soft); font-size:12px; font-weight:700; cursor:pointer;">QR 보기</button>
+        <button data-role="copy" style="flex:1; min-width:0; height:42px; border-radius:12px; border:1px solid var(--border); background:white; color:var(--text-soft); font-size:12px; font-weight:700; cursor:pointer;">링크 복사</button>
+        <button data-role="open" style="flex:1; min-width:0; height:42px; border-radius:12px; border:none; background:var(--deep-rose); color:white; font-size:12px; font-weight:700; cursor:pointer;">하객 화면</button>
       </div>`;
 
     card.querySelector('[data-role="qr"]').onclick = (event) => {
@@ -308,9 +310,52 @@ function renderSiteCardList(containerId, sites, status) {
     };
     card.querySelector('[data-role="copy"]').onclick = (event) => copySitePreviewLinkFromButton(event, s.eventCode);
     card.querySelector('[data-role="open"]').onclick = (event) => openSitePreviewLinkFromButton(event, s.eventCode);
-    const hideBtn = card.querySelector('[data-role="hide"]');
-    if (hideBtn) hideBtn.onclick = (event) => handleDeletePastEvent(event, s.eventCode);
     container.appendChild(card);
+  });
+}
+
+function renderCompactSiteList(containerId, sites, status) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!sites.length) {
+    container.innerHTML = '<div class="manage-empty">해당 결혼식이 없어요</div>';
+    return;
+  }
+  container.innerHTML = '';
+
+  sites.forEach((s) => {
+    const row = document.createElement('div');
+    row.className = 'manage-row';
+    row.onclick = () => openSiteManagePreview(s, status);
+    row.innerHTML = `
+      <div class="manage-row-main">
+        <div class="manage-row-title">${s.groom} ♥ ${s.bride}</div>
+        <div class="manage-row-meta">
+          <span>${s.date}</span>
+          <span>${getDday(s.date)}</span>
+          <span>${s.eventCode}</span>
+        </div>
+      </div>
+      <div class="manage-row-stats">
+        <div class="manage-stat-chip"><strong>${s.guestCount || 0}</strong><span>하객</span></div>
+        <div class="manage-stat-chip"><strong>${s.photoCount || 0}</strong><span>사진</span></div>
+      </div>
+      <div class="manage-row-actions">
+        <button class="manage-row-btn" data-role="qr">QR</button>
+        <button class="manage-row-btn" data-role="copy">링크</button>
+        <button class="manage-row-btn primary" data-role="open">하객 화면</button>
+        ${status === 'past' ? '<button class="manage-row-btn danger" data-role="hide">숨기기</button>' : ''}
+      </div>`;
+
+    row.querySelector('[data-role="qr"]').onclick = (event) => {
+      stopActionPropagation(event);
+      openSiteManagePreview(s, status);
+    };
+    row.querySelector('[data-role="copy"]').onclick = (event) => copySitePreviewLinkFromButton(event, s.eventCode);
+    row.querySelector('[data-role="open"]').onclick = (event) => openSitePreviewLinkFromButton(event, s.eventCode);
+    const hideBtn = row.querySelector('[data-role="hide"]');
+    if (hideBtn) hideBtn.onclick = (event) => handleDeletePastEvent(event, s.eventCode);
+    container.appendChild(row);
   });
 }
 
