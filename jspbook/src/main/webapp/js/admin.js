@@ -65,9 +65,9 @@ async function adminLogout() {
   // 일반 로그아웃 — 운영자 세션 있으면 콘솔, 없으면 로그인 화면
   const groomEl = document.getElementById('groom-name');
   const brideEl = document.getElementById('bride-name');
-  if (groomEl) groomEl.textContent = '권영준';
-  if (brideEl) brideEl.textContent = '이수아';
-  document.querySelectorAll('.nav-couple').forEach(el => el.textContent = '권영준 ♥ 이수아');
+  if (groomEl) groomEl.textContent = '신랑';
+  if (brideEl) brideEl.textContent = '신부';
+  document.querySelectorAll('.nav-couple').forEach(el => el.textContent = '신랑 ♥ 신부');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('main-nav').style.display = 'none';
   document.getElementById('slide-wrapper').style.display = 'none';
@@ -175,14 +175,14 @@ function renderAdminEventOptions() {
     return;
   }
 
+  // 이전에 선택한 행사가 유효하면 복원, 아니면 빈 상태 유지 (자동선택 안함)
   if (previous && adminEvents.some(event => event.eventCode === previous)) {
     adminEventCode = previous;
+    select.value = adminEventCode;
   } else {
-    const withUploads = adminEvents.find(event => Number(event.photoCount || 0) > 0 || Number(event.guestCount || 0) > 0);
-    adminEventCode = (withUploads || adminEvents[0]).eventCode;
+    adminEventCode = '';
+    select.value = '';
   }
-
-  select.value = adminEventCode;
   renderAdminEventSummary();
 }
 
@@ -203,6 +203,11 @@ async function setAdminEventCode(eventCode) {
   const select = document.getElementById('admin-event-select');
   if (select && select.value !== adminEventCode) select.value = adminEventCode;
   renderAdminEventSummary();
+  // 선택한 행사의 신랑/신부 이름을 nav에 반영
+  const selected = getAdminSelectedEvent();
+  document.querySelectorAll('.nav-couple').forEach(el => {
+    el.textContent = selected ? `${selected.groomName} ♥ ${selected.brideName}` : '신랑 ♥ 신부';
+  });
   await renderAdminGrid();
 }
 
