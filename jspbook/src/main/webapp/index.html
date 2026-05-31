@@ -155,84 +155,81 @@
   </div>
 </div>
 
-<!-- ── 사이트 관리 화면 ── -->
+<!-- ── 사이트 관리 화면 (개선안) ── -->
 <div id="screen-manage" class="screen">
-  <div style="min-height:100vh; background:#F8F5F0; display:flex; flex-direction:column;">
-    <div style="background:rgba(255,255,255,0.92); border-bottom:1px solid var(--border); padding:16px 40px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:16px; min-width:0;">
-        <button class="console-back-btn" onclick="showScreen('operator')">← 홈</button>
-        <div>
-          <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; color:var(--deep-rose);"><span style="font-style:italic;">A Moment</span> That Lasts</div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">사이트 관리</div>
+  <div class="manage-shell-new">
+    <!-- 헤더 (max-width 제한) -->
+    <div class="manage-imp-header">
+      <div class="manage-imp-header-left">
+        <button class="console-back-btn" onclick="showScreen('operator')" style="border:none;background:transparent;cursor:pointer;color:var(--text-muted);font-size:13px;font-family:'Noto Sans KR',sans-serif;font-weight:600;">← 홈</button>
+        <div class="manage-imp-brand">
+          A Moment That Lasts
+          <small>사이트 관리</small>
         </div>
       </div>
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div id="manage-total" style="font-size:12px; color:var(--text-muted);">총 0건</div>
-      </div>
+      <div class="manage-imp-total" id="manage-total">총 0건</div>
     </div>
 
-    <div style="flex:1; padding:32px 40px; overflow-y:auto; display:flex; flex-direction:column; gap:24px;">
-      <section class="manage-toolbar-card" style="margin-top:0;">
-        <div class="manage-search-wrap">
-          <label class="toolbar-label" for="manage-search">검색</label>
-          <input id="manage-search" class="manage-search-input" type="text" placeholder="커플명, 행사코드, 날짜로 찾기" oninput="setManageSearchKeyword(this.value)">
+    <!-- 본문 (max-width 제한) -->
+    <div class="manage-imp-body">
+
+      <!-- 툴바 -->
+      <div class="manage-imp-toolbar">
+        <div class="manage-imp-search-wrap">
+          <span class="manage-imp-search-icon">🔍</span>
+          <input class="manage-imp-search-input" id="manage-search" type="text" placeholder="커플명, 행사코드, 날짜로 찾기" oninput="setManageSearchKeyword(this.value)">
         </div>
-        <div class="manage-sort-wrap">
-          <label class="toolbar-label" for="manage-sort">정렬</label>
-          <select id="manage-sort" class="manage-sort-select" onchange="setManageSort(this.value)">
-            <option value="weddingDateDesc">예식일 최신순</option>
-            <option value="weddingDateAsc">예식일 오래된순</option>
-            <option value="createdAtDesc">생성일 최신순</option>
-            <option value="photoCountDesc">사진 많은순</option>
-            <option value="guestCountDesc">하객 많은순</option>
-          </select>
+        <select class="manage-imp-sort" id="manage-sort" onchange="setManageSort(this.value)">
+          <option value="weddingDateDesc">예식일 최신순</option>
+          <option value="weddingDateAsc">예식일 오래된순</option>
+          <option value="createdAtDesc">생성일 최신순</option>
+          <option value="photoCountDesc">사진 많은순</option>
+          <option value="guestCountDesc">하객 많은순</option>
+        </select>
+        <div class="manage-imp-filter-group">
+          <button id="manage-filter-all" class="manage-imp-filter-btn active" onclick="setManageStatusFilter('all')">전체</button>
+          <button id="manage-filter-today" class="manage-imp-filter-btn" onclick="setManageStatusFilter('today')">오늘</button>
+          <button id="manage-filter-future" class="manage-imp-filter-btn" onclick="setManageStatusFilter('future')">예정</button>
+          <button id="manage-filter-past" class="manage-imp-filter-btn" onclick="setManageStatusFilter('past')">지난</button>
         </div>
-        <div class="manage-filter-wrap">
-          <button id="manage-filter-all" class="manage-filter-btn active" onclick="setManageStatusFilter('all')">전체</button>
-          <button id="manage-filter-today" class="manage-filter-btn" onclick="setManageStatusFilter('today')">오늘</button>
-          <button id="manage-filter-future" class="manage-filter-btn" onclick="setManageStatusFilter('future')">예정</button>
-          <button id="manage-filter-past" class="manage-filter-btn" onclick="setManageStatusFilter('past')">지난 행사</button>
+      </div>
+
+      <!-- 오늘의 결혼식 -->
+      <section id="manage-today-section" class="manage-imp-section">
+        <div class="manage-imp-section-head">
+          <span class="manage-imp-dot green"></span>
+          <span class="manage-imp-section-title" style="color:#2E7D32;">오늘의 결혼식</span>
+          <span class="manage-imp-count-badge" id="today-count">0건</span>
+        </div>
+        <div id="today-list" class="site-card-list"></div>
+      </section>
+
+      <!-- 예정된 결혼식 -->
+      <section id="manage-future-section" class="manage-imp-section">
+        <div class="manage-imp-section-head">
+          <span class="manage-imp-dot gold"></span>
+          <span class="manage-imp-section-title" style="color:var(--dark-gold);">예정된 결혼식</span>
+          <span class="manage-imp-count-badge" id="future-count">0건</span>
+        </div>
+        <div id="future-list" class="site-card-list"></div>
+      </section>
+
+      <!-- 지난 결혼식 -->
+      <section id="manage-past-section" class="manage-imp-section">
+        <div class="manage-imp-section-head">
+          <span class="manage-imp-dot gray"></span>
+          <span class="manage-imp-section-title" style="color:var(--text-muted);">지난 결혼식</span>
+          <span class="manage-imp-count-badge" id="past-count">0건</span>
+          <button id="manage-past-toggle" class="manage-imp-toggle" onclick="togglePastSection()">펼치기</button>
+        </div>
+        <div id="past-list-wrap" class="manage-imp-collapse-body">
+          <div id="past-list" class="site-card-list"></div>
         </div>
       </section>
 
-      <section id="manage-today-section" class="manage-section-card featured" style="padding:24px 26px;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-          <div style="width:10px; height:10px; border-radius:50%; background:#4CAF50; animation:pulse2 1.5s infinite;"></div>
-          <div class="manage-section-label-text" style="color:#2E7D32;">오늘의 결혼식</div>
-          <div id="today-count" class="manage-count-chip">0건</div>
-        </div>
-        <div id="today-list" class="manage-today-grid"></div>
-      </section>
-
-      <section id="manage-future-section" class="manage-section-card" style="padding:24px 26px;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-          <div style="width:10px; height:10px; border-radius:50%; background:var(--gold);"></div>
-          <div class="manage-section-label-text" style="color:var(--dark-gold);">예정된 결혼식</div>
-          <div id="future-count" class="manage-count-chip">0건</div>
-        </div>
-        <div id="future-list" class="manage-list-stack"></div>
-      </section>
-
-      <section id="manage-past-section" class="manage-section-card muted" style="padding:24px 26px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <div style="width:10px; height:10px; border-radius:50%; background:#9E9E9E;"></div>
-            <div class="manage-section-label-text" style="color:var(--text-muted);">지난 결혼식</div>
-            <div id="past-count" class="manage-count-chip">0건</div>
-          </div>
-          <button id="manage-past-toggle" class="panel-link-btn" onclick="togglePastSection()">펼치기</button>
-        </div>
-        <div id="past-list-wrap" class="manage-collapsible-wrap">
-          <div id="past-list" class="manage-list-stack"></div>
-        </div>
-      </section>
     </div>
   </div>
 </div>
-
-<style>
-@keyframes pulse2 { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-</style>
 
 <!-- ── QR 발급 화면 ── -->
 <div id="screen-qr" class="screen">

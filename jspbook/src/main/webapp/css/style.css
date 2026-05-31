@@ -2043,3 +2043,325 @@ body {
   .status-ticker-label { font-size: 9px; padding: 0 10px; }
   .ticker-item { font-size: 11px; }
 }
+
+/* ══════════════════════════════════════════════
+   사이트 관리 화면 — 개선안 (manage-imp)
+   ══════════════════════════════════════════════ */
+
+.manage-shell-new {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--ivory);
+}
+
+/* 헤더 */
+.manage-imp-header {
+  width: 100%;
+  max-width: 1280px;
+  background: rgba(255,255,255,0.92);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.manage-imp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.manage-imp-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--deep-rose);
+}
+.manage-imp-brand small {
+  display: block;
+  font-size: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0;
+  margin-top: 1px;
+}
+.manage-imp-total {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--cream);
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* 본문 — max-width 제한 */
+.manage-imp-body {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 40px 60px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 툴바 */
+.manage-imp-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--card-bg);
+  border: 1px solid rgba(255,255,255,.75);
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 16px var(--shadow);
+  backdrop-filter: blur(12px);
+}
+.manage-imp-search-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+.manage-imp-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.manage-imp-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(248,245,240,0.7);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.manage-imp-search-input:focus {
+  border-color: var(--rose);
+  background: white;
+}
+.manage-imp-sort {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(248,245,240,0.7);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+}
+.manage-imp-filter-group {
+  display: flex;
+  gap: 4px;
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 3px;
+}
+.manage-imp-filter-btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.2s;
+}
+.manage-imp-filter-btn.active {
+  background: white;
+  color: var(--deep-rose);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+/* 섹션 */
+.manage-imp-section + .manage-imp-section { margin-top: 8px; }
+.manage-imp-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 0 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.manage-imp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.manage-imp-dot.green { background: var(--green); }
+.manage-imp-dot.gold { background: var(--gold); }
+.manage-imp-dot.gray { background: #9E9E9E; }
+.manage-imp-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-soft);
+  letter-spacing: 0.5px;
+}
+.manage-imp-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+.manage-imp-toggle {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+/* ── 통일된 사이트 카드 (오늘/예정/지난 동일) ── */
+.site-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.site-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.site-card:hover {
+  border-color: var(--rose);
+  box-shadow: 0 4px 16px rgba(139,74,56,0.06);
+}
+.site-card.today-highlight {
+  border-left: 4px solid var(--green);
+  background: linear-gradient(135deg, rgba(247,251,244,0.6), white);
+}
+.site-card .card-left {
+  flex: 1;
+  min-width: 0;
+}
+.site-card .card-couple {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: var(--deep-rose);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.site-card .card-couple .heart {
+  display: inline-block;
+  margin: 0 2px;
+  font-size: 14px;
+}
+.site-card .card-info {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.site-card .card-dday {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--text-soft);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.site-card .card-dday.today {
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  color: white;
+}
+.site-card .card-stats {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.site-card .stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  background: var(--cream);
+  border-radius: 8px;
+}
+.site-card .stat-chip strong { color: var(--text-soft); }
+
+/* 액션 버튼 — hover 시에만 표시 */
+.site-card .card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.site-card:hover .card-actions { opacity: 1; }
+.site-card .action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.15s;
+  color: var(--text-muted);
+}
+.site-card .action-btn:hover {
+  background: var(--cream);
+  border-color: var(--rose);
+  color: var(--deep-rose);
+}
+.site-card .action-btn.primary {
+  background: var(--deep-rose);
+  color: white;
+  border-color: var(--deep-rose);
+}
+.site-card .action-btn.primary:hover {
+  background: #7A3E2E;
+}
+
+/* 지난 행사 접기 */
+.manage-imp-collapse-body {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.manage-imp-collapse-body.hidden { max-height: 0; }
+
+@media (max-width: 768px) {
+  .manage-imp-body { padding: 20px 16px; }
+  .manage-imp-header { padding: 12px 16px; }
+  .manage-imp-toolbar { flex-direction: column; align-items: stretch; }
+  .manage-imp-filter-group { justify-content: center; }
+  .site-card .card-actions { opacity: 1; }
+  .site-card { flex-wrap: wrap; }
+  .site-card .card-stats { order: 3; }
+  .site-card .card-actions { order: 4; width: 100%; justify-content: flex-end; opacity: 1; }
+}
