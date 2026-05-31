@@ -261,6 +261,14 @@ async function renderAdminGrid() {
   }
   currentEventCode = adminEventCode;
 
+  // nav-couple을 선택한 행사의 신랑/신부 이름으로 업데이트
+  if (adminEventCode) {
+    const selected = getAdminSelectedEvent();
+    document.querySelectorAll('.nav-couple').forEach(el => {
+      el.textContent = selected ? `${selected.groomName} ♥ ${selected.brideName}` : '신랑 ♥ 신부';
+    });
+  }
+
   await loadPosts();
 
   const grid = document.getElementById('admin-grid');
