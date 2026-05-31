@@ -158,15 +158,17 @@
 <!-- ── 사이트 관리 화면 (개선안) ── -->
 <div id="screen-manage" class="screen">
   <div class="manage-shell-new">
-    <div class="manage-imp-header">
-      <div class="manage-imp-header-left">
-        <button class="console-back-btn" onclick="showScreen('operator')" style="border:none;background:transparent;cursor:pointer;color:var(--text-muted);font-size:13px;font-family:'Noto Sans KR',sans-serif;font-weight:600;">← 홈</button>
-        <div class="manage-imp-brand">
-          A Moment That Lasts
-          <small>사이트 관리</small>
-        </div>
+    <div class="console-topbar">
+      <div class="console-topbar-left">
+        <button class="console-back-btn" onclick="showScreen('operator')">← 홈</button>
       </div>
-      <div class="manage-imp-total" id="manage-total">총 0건</div>
+      <div class="console-topbar-center">
+        <div class="console-topbar-title">A Moment That Lasts</div>
+        <div class="console-topbar-label">사이트 관리</div>
+      </div>
+      <div class="console-topbar-right">
+        <span class="console-topbar-badge" id="manage-total">총 0건</span>
+      </div>
     </div>
 
     <div class="manage-imp-body">
@@ -228,19 +230,21 @@
 <!-- ── QR 발급 화면 ── -->
 <div id="screen-qr" class="screen">
   <div class="console-shell qr-shell">
-    <header class="console-header compact">
-      <div class="console-header-main">
+    <header class="console-topbar">
+      <div class="console-topbar-left">
         <button class="console-back-btn" onclick="showScreen('operator')">← 홈</button>
-        <div>
-          <div class="console-eyebrow">SITE CREATION CONSOLE</div>
-          <div class="console-brand-title"><span>A Moment</span> Launch Studio</div>
-          <div class="console-brand-subtitle">한 번의 입력으로 웨딩 사이트와 QR 입장 흐름을 함께 준비합니다.</div>
-        </div>
       </div>
-      <div class="console-header-side">
-        <div class="console-badge">운영자 전용</div>
+      <div class="console-topbar-center">
+        <div class="console-topbar-label">SITE CREATION CONSOLE</div>
+        <div class="console-topbar-title"><span>A Moment</span> Launch Studio</div>
+      </div>
+      <div class="console-topbar-right">
+        <span class="console-topbar-badge">운영자 전용</span>
       </div>
     </header>
+    <div class="qr-subtitle" style="padding:14px 32px 0;max-width:1280px;margin:0 auto;width:100%;box-sizing:border-box;font-size:13px;color:var(--text-muted);line-height:1.7;">
+      한 번의 입력으로 웨딩 사이트와 QR 입장 흐름을 함께 준비합니다.
+    </div>
 
     <main class="qr-main-grid">
       <section class="qr-form-column">
@@ -598,13 +602,18 @@
 
 <!-- ── ADMIN ── -->
 <div id="screen-admin" class="screen">
-  <nav class="top-nav">
-    <div class="nav-logo">
-      <span class="nav-couple">신랑 ♥ 신부</span>
-      <span>Admin</span> Page
+  <div class="console-topbar">
+    <div class="console-topbar-left">
+      <button class="console-back-btn" onclick="showScreen('operator')">← 홈</button>
     </div>
-    <button onclick="adminLogout()" style="padding:6px 12px; font-size:11px; background:transparent; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans KR',sans-serif; color:var(--text-soft); cursor:pointer; white-space:nowrap;">로그아웃</button>
-  </nav>
+    <div class="console-topbar-center">
+      <div class="console-topbar-title">A Moment That Lasts</div>
+      <div class="console-topbar-label">업로드 관리</div>
+    </div>
+    <div class="console-topbar-right">
+      <button class="console-topbar-logout" onclick="adminLogout()">로그아웃</button>
+    </div>
+  </div>
   <div class="admin-body">
     <!-- 결혼식 선택 카드 -->
     <div style="background:var(--card); border:1px solid rgba(255,255,255,.75); border-radius:20px; padding:20px 24px 18px; margin-bottom:20px; box-shadow:0 4px 16px rgba(62,41,34,0.06); backdrop-filter:blur(12px);">
