@@ -19,7 +19,11 @@ function showScreen(name, skipHistory = false) {
     document.querySelectorAll('.screen-body').forEach(b => b.style.display = 'none');
     document.getElementById('screen-' + name).classList.add('active');
     if (name === 'admin') renderAdminGrid();
-    if (name === 'operator') renderOperatorDashboard();
+    if (name === 'operator') {
+      renderOperatorDashboard();
+      if (typeof switchPanel === 'function') switchPanel('panel-dashboard');
+      if (typeof updateSidebar === 'function') updateSidebar();
+    }
     return;
   }
 
@@ -136,13 +140,7 @@ function togglePastSection(forceOpen) {
 function syncPastSection() {
   const wrap = document.getElementById('past-list-wrap');
   const toggle = document.getElementById('manage-past-toggle');
-  if (wrap) {
-    if (managePastCollapsed) {
-      wrap.classList.add('hidden');
-    } else {
-      wrap.classList.remove('hidden');
-    }
-  }
+  if (wrap) wrap.style.display = managePastCollapsed ? 'none' : 'block';
   if (toggle) toggle.textContent = managePastCollapsed ? '펼치기' : '접기';
 }
 
@@ -261,12 +259,12 @@ async function renderManageScreen() {
 
   updateManageSummary(allItems, filteredItems, today, future, past);
   applyManageSectionVisibility(today, future, past);
-  renderSiteCardList('today-list', today, 'today');
-  renderSiteCardList('future-list', future, 'future');
-  renderSiteCardList('past-list', past, 'past');
+  renderTodaySiteList('today-list', today, 'today');
+  renderCompactSiteList('future-list', future, 'future');
+  renderCompactSiteList('past-list', past, 'past');
 }
 
-function renderSiteCardList(containerId, sites, status) {
+function renderTodaySiteList(containerId, sites, status) {
   const container = document.getElementById(containerId);
   if (!container) return;
   if (!sites.length) {
@@ -275,40 +273,71 @@ function renderSiteCardList(containerId, sites, status) {
   }
   container.innerHTML = '';
   sites.forEach((s) => {
-    const isToday = status === 'today';
-    const dday = getDday(s.date);
-    const highlight = isToday ? 'today-highlight' : '';
-
     const card = document.createElement('div');
-    card.className = `site-card ${highlight}`;
+    card.className = 'site-card today-highlight';
     card.onclick = () => openSiteManagePreview(s, status);
     card.innerHTML = `
       <div class="card-left">
         <div class="card-couple">${s.groom} <span class="heart">♥</span> ${s.bride}</div>
-        <div class="card-info">
-          <span>${s.date}</span>
-          ${s.eventCode ? `<span>${s.eventCode}</span>` : ''}
-        </div>
+        <div class="card-info"><span>${s.date || '-'}</span><span>${s.eventCode || ''}</span></div>
       </div>
-      <div class="card-dday${isToday ? ' today' : ''}">${dday}</div>
+      <div class="card-dday today">${getDday(s.date)}</div>
       <div class="card-stats">
-        <div class="stat-chip"><strong>${s.guestCount || 0}</strong> 하객</div>
-        <div class="stat-chip"><strong>${s.photoCount || 0}</strong> 사진</div>
+        <span class="stat-chip"><strong>${s.guestCount || 0}</strong> 하객</span>
+        <span class="stat-chip"><strong>${s.photoCount || 0}</strong> 사진</span>
       </div>
       <div class="card-actions">
-        <button class="action-btn" data-role="qr" title="QR 보기">📱</button>
-        <button class="action-btn" data-role="copy" title="링크 복사">🔗</button>
-        <button class="action-btn primary" data-role="open" title="하객 화면">👥</button>
-        ${status === 'past' ? '<button class="action-btn" data-role="hide" title="숨기기" style="color:#b05a5a;">🚫</button>' : ''}
+        <button class="act-btn" data-action="qr">📱 QR 관리</button>
+        <button class="act-btn" data-action="copy">🔗 링크</button>
+        <button class="act-btn primary" data-action="open">하객 화면</button>
       </div>`;
-
-    card.querySelector('[data-role="qr"]').onclick = (event) => {
+    card.querySelector('[data-action="qr"]').onclick = (event) => {
       stopActionPropagation(event);
       openSiteManagePreview(s, status);
     };
-    card.querySelector('[data-role="copy"]').onclick = (event) => copySitePreviewLinkFromButton(event, s.eventCode);
-    card.querySelector('[data-role="open"]').onclick = (event) => openSitePreviewLinkFromButton(event, s.eventCode);
-    const hideBtn = card.querySelector('[data-role="hide"]');
+    card.querySelector('[data-action="copy"]').onclick = (event) => copySitePreviewLinkFromButton(event, s.eventCode);
+    card.querySelector('[data-action="open"]').onclick = (event) => openSitePreviewLinkFromButton(event, s.eventCode);
+    container.appendChild(card);
+  });
+}
+
+function renderCompactSiteList(containerId, sites, status) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!sites.length) {
+    container.innerHTML = '<div class="manage-empty">해당 결혼식이 없어요</div>';
+    return;
+  }
+  container.innerHTML = '';
+
+  sites.forEach((s) => {
+    const card = document.createElement('div');
+    card.className = 'site-card' + (status === 'past' ? ' muted' : '');
+    card.onclick = () => openSiteManagePreview(s, status);
+    const ddayClass = 'card-dday' + (status === 'today' ? ' today' : '');
+    card.innerHTML = `
+      <div class="card-left">
+        <div class="card-couple${status === 'past' ? '' : ''}" style="${status === 'past' ? 'color:var(--text-muted);' : ''}">${s.groom} <span class="heart">♥</span> ${s.bride}</div>
+        <div class="card-info"><span>${s.date || '-'}</span><span>${s.eventCode || ''}</span></div>
+      </div>
+      <div class="${ddayClass}" style="${status === 'past' ? 'background:#E0D8D2;' : ''}">${getDday(s.date)}</div>
+      <div class="card-stats">
+        <span class="stat-chip"><strong>${s.guestCount || 0}</strong> 하객</span>
+        <span class="stat-chip"><strong>${s.photoCount || 0}</strong> 사진</span>
+      </div>
+      <div class="card-actions">
+        <button class="act-btn" data-action="qr">📱 QR 관리</button>
+        <button class="act-btn" data-action="copy">🔗 링크</button>
+        <button class="act-btn primary" data-action="open">하객 화면</button>
+        ${status === 'past' ? '<button class="act-btn danger" data-action="hide">🚫 비활성화</button>' : ''}
+      </div>`;
+    card.querySelector('[data-action="qr"]').onclick = (event) => {
+      stopActionPropagation(event);
+      openSiteManagePreview(s, status);
+    };
+    card.querySelector('[data-action="copy"]').onclick = (event) => copySitePreviewLinkFromButton(event, s.eventCode);
+    card.querySelector('[data-action="open"]').onclick = (event) => openSitePreviewLinkFromButton(event, s.eventCode);
+    const hideBtn = card.querySelector('[data-action="hide"]');
     if (hideBtn) hideBtn.onclick = (event) => handleDeletePastEvent(event, s.eventCode);
     container.appendChild(card);
   });
@@ -554,16 +583,20 @@ function closePhotoViewer() {
 }
 
 function opGoCreate() {
-  document.getElementById('screen-operator').classList.remove('active');
-  document.getElementById('screen-qr').classList.add('active');
-  currentScreenName = 'qr';
+  goHome();
+  switchPanel('panel-create');
+  activateSidebar(1);
+  currentScreenName = 'operator';
 }
 
 async function opGoManage() {
-  document.getElementById('screen-operator').classList.remove('active');
-  document.getElementById('screen-manage').classList.add('active');
-  currentScreenName = 'manage';
-  await renderManageScreen();
+  goLogin();
+  // Quick way: go to operator home and switch to manage panel
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-operator').classList.add('active');
+  switchPanel('panel-manage');
+  activateSidebar(2);
+  currentScreenName = 'operator';
 }
 
 async function opGoUploads() {
