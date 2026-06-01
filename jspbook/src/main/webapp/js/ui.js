@@ -603,9 +603,10 @@ function closePhotoViewer() {
 }
 
 function opGoCreate() {
-  document.getElementById('screen-operator').classList.remove('active');
-  document.getElementById('screen-qr').classList.add('active');
-  currentScreenName = 'qr';
+  goHome();
+  switchPanel('panel-create');
+  activateSidebar(1);
+  currentScreenName = 'operator';
 }
 
 async function opGoManage() {

@@ -491,201 +491,186 @@
   </div> <!-- /admin-body -->
 </div> <!-- /panel-admin -->
 
-    </main> <!-- /main-area -->
-  </div> <!-- /operator-layout -->
+    <!-- ── content panel: 사이트 생성 ── -->
+    <div id="panel-create" class="content-panel">
+      <div class="main-breadcrumb">SITE CREATION CONSOLE</div>
+      <main class="qr-main-grid">
+        <section class="qr-form-column">
+          <article class="console-card">
+            <div class="console-card-head">
+              <div>
+                <div class="panel-kicker">BASIC INFO</div>
+                <h2>커플 및 일정 정보</h2>
+              </div>
+            </div>
+            <div class="console-form-grid two-col">
+              <div>
+                <label class="toolbar-label" for="qr-groom">신랑 이름</label>
+                <input type="text" id="qr-groom" class="form-input" placeholder="신랑 이름 (최대 5글자)" maxlength="5" oninput="clearQR()">
+              </div>
+              <div>
+                <label class="toolbar-label" for="qr-bride">신부 이름</label>
+                <input type="text" id="qr-bride" class="form-input" placeholder="신부 이름 (최대 5글자)" maxlength="5" oninput="clearQR()">
+              </div>
+            </div>
+            <div class="console-form-block">
+              <label class="toolbar-label" for="wedding-date">결혼식 날짜 <span class="required-dot">*</span></label>
+              <input type="date" id="wedding-date" class="form-input" oninput="clearQR(); validateDate(this); updateValidityRange()">
+            </div>
+            <div class="console-form-block validity-block">
+              <div class="toolbar-label">QR 유효 기간 <span class="toolbar-label-note">결혼식 날짜 기준 최대 ±5일</span></div>
+              <div class="console-form-grid two-col validity-grid">
+                <div>
+                  <label class="micro-label" for="qr-start">시작일</label>
+                  <input type="date" id="qr-start" class="form-input" oninput="validateValidityRange()">
+                </div>
+                <div>
+                  <label class="micro-label" for="qr-end">종료일</label>
+                  <input type="date" id="qr-end" class="form-input" oninput="validateValidityRange()">
+                </div>
+              </div>
+              <div id="validity-msg" class="console-helper-text">결혼식 날짜를 먼저 선택해 주세요</div>
+            </div>
+          </article>
+
+          <article class="console-card">
+            <div class="console-card-head">
+              <div>
+                <div class="panel-kicker">INVITATION</div>
+                <h2>청첩장 업로드</h2>
+              </div>
+            </div>
+            <div style="display:flex; background:var(--cream); border-radius:10px; padding:3px; margin-bottom:16px;">
+              <button id="inv-type-img" onclick="setInvitationType('image')"
+                style="flex:1; padding:8px; border:none; border-radius:8px; background:var(--white); color:var(--deep-rose); font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer; box-shadow:0 1px 3px var(--shadow); transition:all 0.2s; font-weight:500;">
+                🖼 이미지 업로드
+              </button>
+              <button id="inv-type-url" onclick="setInvitationType('url')"
+                style="flex:1; padding:8px; border:none; border-radius:8px; background:transparent; color:var(--text-muted); font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer; transition:all 0.2s;">
+                🔗 링크 삽입
+              </button>
+            </div>
+            <div id="inv-image-section">
+              <div id="invitation-drop" onclick="document.getElementById('invitation-input').click()"
+                style="border:1.5px dashed var(--blush); border-radius:12px; padding:32px 20px; text-align:center; cursor:pointer; transition:border-color 0.2s; background:var(--cream);"
+                onmouseover="this.style.borderColor='var(--rose)'" onmouseout="this.style.borderColor='var(--blush)'">
+                <div style="font-size:28px; margin-bottom:8px; opacity:0.5;">💌</div>
+                <div style="font-size:13px; color:var(--text-muted);">클릭하여 청첩장 이미지 업로드</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">JPG, PNG · 최대 10MB</div>
+                <input type="file" id="invitation-input" accept="image/*" style="display:none" onchange="previewInvitation(event)">
+              </div>
+              <div id="invitation-preview" style="display:none; margin-top:12px; text-align:center;">
+                <img id="invitation-img" style="max-width:100%; max-height:200px; border-radius:8px; border:1px solid var(--border); object-fit:contain;">
+                <button onclick="clearInvitation()" style="display:block; margin:8px auto 0; font-size:11px; color:var(--rose); border:none; background:transparent; cursor:pointer;">✕ 제거</button>
+              </div>
+            </div>
+            <div id="inv-url-section" style="display:none;">
+              <input type="url" id="invitation-url-input" class="form-input"
+                placeholder="https://toourguest.com/cards/..."
+                oninput="previewInvitationUrl(this.value)" style="margin-bottom:8px;">
+              <div id="inv-url-preview" style="display:none; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--cream);">
+                <div style="padding:8px 12px; font-size:11px; color:var(--text-muted); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:6px;">
+                  <span>🔗</span> <span id="inv-url-label" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                  <button onclick="clearInvitationUrl()" style="margin-left:auto; border:none; background:transparent; color:var(--rose); cursor:pointer; font-size:11px; flex-shrink:0;">✕ 제거</button>
+                </div>
+                <iframe id="inv-url-iframe" style="width:100%; height:200px; border:none; pointer-events:none;"></iframe>
+              </div>
+            </div>
+          </article>
+
+          <article class="console-card">
+            <div class="console-card-head with-meta">
+              <div>
+                <div class="panel-kicker">FAQ</div>
+                <h2>자주 묻는 질문</h2>
+              </div>
+              <button onclick="addFaqItem()" class="faq-add-btn">＋ 질문 추가</button>
+            </div>
+            <div id="faq-edit-list"></div>
+            <div id="faq-edit-empty" style="text-align:center; padding:28px 0; color:var(--text-muted); font-size:13px;">
+              💬 하객이 자주 궁금해할 질문을 추가해 주세요<br>
+              <span style="font-size:11px; margin-top:6px; display:block; line-height:1.6; color:var(--text-muted);">
+                주차 안내 · 복장 규정 · 식사 정보 · 위치 안내 등
+              </span>
+            </div>
+          </article>
+        </section>
+
+        <section class="qr-side-column">
+          <article class="console-card">
+            <div class="console-card-head with-meta">
+              <div>
+                <div class="panel-kicker">GALLERY ASSETS</div>
+                <h2>웨딩 사진 컬렉션</h2>
+              </div>
+              <div id="wedding-photo-count" class="console-summary-chip">0 / 3~8장</div>
+            </div>
+            <div id="wedding-photo-grid" class="wedding-photo-grid"></div>
+            <div class="upload-drop-zone compact" onclick="document.getElementById('wedding-photo-input').click()">
+              <div class="upload-drop-icon small">＋</div>
+              <div class="upload-drop-title small">사진 추가</div>
+              <div class="upload-drop-caption">최대 8장까지 업로드할 수 있어요</div>
+              <input type="file" id="wedding-photo-input" accept="image/*" multiple style="display:none" onchange="addWeddingPhotos(event)">
+            </div>
+          </article>
+
+          <article class="console-card">
+            <div class="console-card-head">
+              <div>
+                <div class="panel-kicker">LIVE SUMMARY</div>
+                <h2>생성 준비 현황</h2>
+              </div>
+            </div>
+            <div class="progress-section">
+              <div class="progress-meta">
+                <span id="create-progress-text" class="progress-label">아직 기본 정보 입력 전입니다</span>
+                <strong id="create-progress-count" class="progress-count">0 / 4</strong>
+              </div>
+              <div class="progress-track">
+                <div id="create-progress-fill" class="progress-fill"></div>
+              </div>
+            </div>
+            <div class="summary-list">
+              <div class="summary-item"><span class="summary-label">커플 정보</span><span class="summary-value" id="create-couple-summary">이름 입력 대기</span></div>
+              <div class="summary-item"><span class="summary-label">예식 일정</span><span class="summary-value" id="create-date-summary">날짜 미선택</span></div>
+              <div class="summary-item"><span class="summary-label">QR 유효 기간</span><span class="summary-value" id="create-validity-summary">결혼식 날짜 선택 후 자동 제안</span></div>
+              <div class="summary-item"><span class="summary-label">청첩장</span><span class="summary-value" id="create-invitation-summary">미업로드</span></div>
+              <div class="summary-item"><span class="summary-label">웨딩 사진</span><span class="summary-value" id="create-photo-summary">0장 업로드</span></div>
+            </div>
+          </article>
+
+          <article class="console-card qr-output-card">
+            <div class="console-card-head">
+              <div>
+                <div class="panel-kicker">LAUNCH</div>
+                <h2>사이트 생성 및 QR 발급</h2>
+              </div>
+            </div>
+            <button class="btn-primary launch-btn" onclick="openConfirmModal()">사이트 생성 및 QR 발급</button>
+            <div id="qr-checklist" class="launch-checklist">
+              <div id="check-names">◦ 신랑/신부 이름 입력</div>
+              <div id="check-date">◦ 결혼식 날짜 선택</div>
+              <div id="check-invitation">◦ 청첩장 업로드</div>
+              <div id="check-photos">◦ 웨딩사진 3장 이상 업로드</div>
+            </div>
+            <div id="qr-output" class="qr-preview-wrap" style="display:none;">
+              <div class="qr-preview-card">
+                <div id="qr-canvas"></div>
+                <div id="qr-names" class="qr-preview-title"></div>
+                <div id="qr-expiry" class="qr-preview-caption"></div>
+              </div>
+              <div class="qr-preview-actions" style="grid-template-columns:1fr;">
+                <button onclick="downloadQR()" class="console-secondary-btn">QR 저장</button>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div> <!-- /panel-create -->
+
+  </main> <!-- /main-area -->
+</div> <!-- /operator-layout -->
 </div> <!-- /screen-operator -->
-
-<!-- ── QR 발급 화면 ── -->
-<div id="screen-qr" class="screen">
-  <div class="console-shell qr-shell">
-    <header class="console-header compact">
-      <div class="console-header-main">
-        <button class="console-back-btn" onclick="showScreen('operator')">← 홈</button>
-        <div>
-          <div class="console-eyebrow">SITE CREATION CONSOLE</div>
-          <div class="console-brand-title"><span>A Moment</span> Launch Studio</div>
-          <div class="console-brand-subtitle">한 번의 입력으로 웨딩 사이트와 QR 입장 흐름을 함께 준비합니다.</div>
-        </div>
-      </div>
-      <div class="console-header-side">
-        <div class="console-badge">운영자 전용</div>
-      </div>
-    </header>
-
-    <main class="qr-main-grid">
-      <section class="qr-form-column">
-        <article class="console-card">
-          <div class="console-card-head">
-            <div>
-              <div class="panel-kicker">BASIC INFO</div>
-              <h2>커플 및 일정 정보</h2>
-            </div>
-          </div>
-          <div class="console-form-grid two-col">
-            <div>
-              <label class="toolbar-label" for="qr-groom">신랑 이름</label>
-              <input type="text" id="qr-groom" class="form-input" placeholder="신랑 이름 (최대 5글자)" maxlength="5" oninput="clearQR()">
-            </div>
-            <div>
-              <label class="toolbar-label" for="qr-bride">신부 이름</label>
-              <input type="text" id="qr-bride" class="form-input" placeholder="신부 이름 (최대 5글자)" maxlength="5" oninput="clearQR()">
-            </div>
-          </div>
-          <div class="console-form-block">
-            <label class="toolbar-label" for="wedding-date">결혼식 날짜 <span class="required-dot">*</span></label>
-            <input type="date" id="wedding-date" class="form-input" oninput="clearQR(); validateDate(this); updateValidityRange()">
-          </div>
-          <div class="console-form-block validity-block">
-            <div class="toolbar-label">QR 유효 기간 <span class="toolbar-label-note">결혼식 날짜 기준 최대 ±5일</span></div>
-            <div class="console-form-grid two-col validity-grid">
-              <div>
-                <label class="micro-label" for="qr-start">시작일</label>
-                <input type="date" id="qr-start" class="form-input" oninput="validateValidityRange()">
-              </div>
-              <div>
-                <label class="micro-label" for="qr-end">종료일</label>
-                <input type="date" id="qr-end" class="form-input" oninput="validateValidityRange()">
-              </div>
-            </div>
-            <div id="validity-msg" class="console-helper-text">결혼식 날짜를 먼저 선택해 주세요</div>
-          </div>
-        </article>
-
-        <article class="console-card">
-          <div class="console-card-head">
-            <div>
-              <div class="panel-kicker">INVITATION</div>
-              <h2>청첩장 업로드</h2>
-            </div>
-          </div>
-          <div style="display:flex; background:var(--cream); border-radius:10px; padding:3px; margin-bottom:16px;">
-            <button id="inv-type-img" onclick="setInvitationType('image')"
-              style="flex:1; padding:8px; border:none; border-radius:8px; background:var(--white); color:var(--deep-rose); font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer; box-shadow:0 1px 3px var(--shadow); transition:all 0.2s; font-weight:500;">
-              🖼 이미지 업로드
-            </button>
-            <button id="inv-type-url" onclick="setInvitationType('url')"
-              style="flex:1; padding:8px; border:none; border-radius:8px; background:transparent; color:var(--text-muted); font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer; transition:all 0.2s;">
-              🔗 링크 삽입
-            </button>
-          </div>
-          <div id="inv-image-section">
-            <div id="invitation-drop" onclick="document.getElementById('invitation-input').click()"
-              style="border:1.5px dashed var(--blush); border-radius:12px; padding:32px 20px; text-align:center; cursor:pointer; transition:border-color 0.2s; background:var(--cream);"
-              onmouseover="this.style.borderColor='var(--rose)'" onmouseout="this.style.borderColor='var(--blush)'">
-              <div style="font-size:28px; margin-bottom:8px; opacity:0.5;">💌</div>
-              <div style="font-size:13px; color:var(--text-muted);">클릭하여 청첩장 이미지 업로드</div>
-              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">JPG, PNG · 최대 10MB</div>
-              <input type="file" id="invitation-input" accept="image/*" style="display:none" onchange="previewInvitation(event)">
-            </div>
-            <div id="invitation-preview" style="display:none; margin-top:12px; text-align:center;">
-              <img id="invitation-img" style="max-width:100%; max-height:200px; border-radius:8px; border:1px solid var(--border); object-fit:contain;">
-              <button onclick="clearInvitation()" style="display:block; margin:8px auto 0; font-size:11px; color:var(--rose); border:none; background:transparent; cursor:pointer;">✕ 제거</button>
-            </div>
-          </div>
-          <div id="inv-url-section" style="display:none;">
-            <input type="url" id="invitation-url-input" class="form-input"
-              placeholder="https://toourguest.com/cards/..."
-              oninput="previewInvitationUrl(this.value)" style="margin-bottom:8px;">
-            <div id="inv-url-preview" style="display:none; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--cream);">
-              <div style="padding:8px 12px; font-size:11px; color:var(--text-muted); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:6px;">
-                <span>🔗</span> <span id="inv-url-label" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                <button onclick="clearInvitationUrl()" style="margin-left:auto; border:none; background:transparent; color:var(--rose); cursor:pointer; font-size:11px; flex-shrink:0;">✕ 제거</button>
-              </div>
-              <iframe id="inv-url-iframe" style="width:100%; height:200px; border:none; pointer-events:none;"></iframe>
-            </div>
-          </div>
-        </article>
-
-        <article class="console-card">
-          <div class="console-card-head with-meta">
-            <div>
-              <div class="panel-kicker">FAQ</div>
-              <h2>자주 묻는 질문</h2>
-            </div>
-            <button onclick="addFaqItem()" class="faq-add-btn">＋ 질문 추가</button>
-          </div>
-          <div id="faq-edit-list"></div>
-          <div id="faq-edit-empty" style="text-align:center; padding:28px 0; color:var(--text-muted); font-size:13px;">
-            💬 하객이 자주 궁금해할 질문을 추가해 주세요<br>
-            <span style="font-size:11px; margin-top:6px; display:block; line-height:1.6; color:var(--text-muted);">
-              주차 안내 · 복장 규정 · 식사 정보 · 위치 안내 등
-            </span>
-          </div>
-        </article>
-      </section>
-
-      <section class="qr-side-column">
-        <article class="console-card">
-          <div class="console-card-head with-meta">
-            <div>
-              <div class="panel-kicker">GALLERY ASSETS</div>
-              <h2>웨딩 사진 컬렉션</h2>
-            </div>
-            <div id="wedding-photo-count" class="console-summary-chip">0 / 3~8장</div>
-          </div>
-          <div id="wedding-photo-grid" class="wedding-photo-grid"></div>
-          <div class="upload-drop-zone compact" onclick="document.getElementById('wedding-photo-input').click()">
-            <div class="upload-drop-icon small">＋</div>
-            <div class="upload-drop-title small">사진 추가</div>
-            <div class="upload-drop-caption">최대 8장까지 업로드할 수 있어요</div>
-            <input type="file" id="wedding-photo-input" accept="image/*" multiple style="display:none" onchange="addWeddingPhotos(event)">
-          </div>
-        </article>
-
-        <article class="console-card">
-          <div class="console-card-head">
-            <div>
-              <div class="panel-kicker">LIVE SUMMARY</div>
-              <h2>생성 준비 현황</h2>
-            </div>
-          </div>
-          <div class="progress-section">
-            <div class="progress-meta">
-              <span id="create-progress-text" class="progress-label">아직 기본 정보 입력 전입니다</span>
-              <strong id="create-progress-count" class="progress-count">0 / 4</strong>
-            </div>
-            <div class="progress-track">
-              <div id="create-progress-fill" class="progress-fill"></div>
-            </div>
-          </div>
-          <div class="summary-list">
-            <div class="summary-item"><span class="summary-label">커플 정보</span><span class="summary-value" id="create-couple-summary">이름 입력 대기</span></div>
-            <div class="summary-item"><span class="summary-label">예식 일정</span><span class="summary-value" id="create-date-summary">날짜 미선택</span></div>
-            <div class="summary-item"><span class="summary-label">QR 유효 기간</span><span class="summary-value" id="create-validity-summary">결혼식 날짜 선택 후 자동 제안</span></div>
-            <div class="summary-item"><span class="summary-label">청첩장</span><span class="summary-value" id="create-invitation-summary">미업로드</span></div>
-            <div class="summary-item"><span class="summary-label">웨딩 사진</span><span class="summary-value" id="create-photo-summary">0장 업로드</span></div>
-          </div>
-        </article>
-
-        <article class="console-card qr-output-card">
-          <div class="console-card-head">
-            <div>
-              <div class="panel-kicker">LAUNCH</div>
-              <h2>사이트 생성 및 QR 발급</h2>
-            </div>
-          </div>
-          <button class="btn-primary launch-btn" onclick="openConfirmModal()">사이트 생성 및 QR 발급</button>
-          <div id="qr-checklist" class="launch-checklist">
-            <div id="check-names">◦ 신랑/신부 이름 입력</div>
-            <div id="check-date">◦ 결혼식 날짜 선택</div>
-            <div id="check-invitation">◦ 청첩장 업로드</div>
-            <div id="check-photos">◦ 웨딩사진 3장 이상 업로드</div>
-          </div>
-          <div id="qr-output" class="qr-preview-wrap" style="display:none;">
-            <div class="qr-preview-card">
-              <div id="qr-canvas"></div>
-              <div id="qr-names" class="qr-preview-title"></div>
-              <div id="qr-expiry" class="qr-preview-caption"></div>
-            </div>
-            <div class="qr-preview-actions" style="grid-template-columns:1fr;">
-              <button onclick="downloadQR()" class="console-secondary-btn">QR 저장</button>
-            </div>
-          </div>
-        </article>
-      </section>
-    </main>
-  </div>
-</div>
 
 <!-- ── LANDING (입장 화면) ── -->
 <div id="screen-landing" class="screen">
