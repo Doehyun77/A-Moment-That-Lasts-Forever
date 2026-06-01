@@ -276,9 +276,20 @@ async function renderAdminGrid() {
   const totalPhotos = posts.flatMap(p => p.photos || []).length;
   const totalGuests = posts.length;
   const totalMessages = posts.filter(p => p.msg && p.msg !== '(사진만 공유)').length;
-  document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = totalPhotos;
-  document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = totalGuests;
-  document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = totalMessages;
+  // Guest screen-admin stats
+  const s1 = document.querySelector('.stat-card:nth-child(1) .stat-value');
+  const s2 = document.querySelector('.stat-card:nth-child(2) .stat-value');
+  const s3 = document.querySelector('.stat-card:nth-child(3) .stat-value');
+  if (s1) s1.textContent = totalPhotos;
+  if (s2) s2.textContent = totalGuests;
+  if (s3) s3.textContent = totalMessages;
+  // Operator panel-admin stats
+  const ap = document.getElementById('admin-photo-count');
+  const ag = document.getElementById('admin-guest-count');
+  const am = document.getElementById('admin-message-count');
+  if (ap) ap.textContent = totalPhotos;
+  if (ag) ag.textContent = totalGuests;
+  if (am) am.textContent = totalMessages;
 
   grid.innerHTML = '';
   if (!adminEventCode) {
