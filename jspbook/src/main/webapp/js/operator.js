@@ -131,8 +131,13 @@ function activateSidebar(idx) {
 function switchOperatorTab(tab) {
   const map = { home: 0, create: 1, manage: 2, upload: 3 };
   const idx = map[tab] || 0;
+  if (tab === 'create') {
+    goHome();
+    switchPanel('panel-create');
+    activateSidebar(idx);
+    return;
+  }
   activateSidebar(idx);
-  if (tab === 'create') { switchPanel('panel-create'); return; }
   if (tab === 'manage') switchPanel('panel-manage');
   else if (tab === 'upload') switchPanel('panel-admin');
   else switchPanel('panel-dashboard');
