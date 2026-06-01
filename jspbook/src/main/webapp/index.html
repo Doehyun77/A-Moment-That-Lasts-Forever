@@ -7,231 +7,493 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20260530e">
+<link rel="stylesheet" href="css/style.css?v=20260601a">
 </head>
 <body>
 
-
-<!-- ── 운영자 로그인 ── -->
+<!-- ══════════ LOGIN ══════════ -->
 <div id="screen-login" class="screen active">
-  <div style="min-height:100vh; background:linear-gradient(rgba(248,245,240,0.58), rgba(248,245,240,0.58)), url('media/operator-login-bg-poster.jpg') center/cover no-repeat; display:flex; align-items:center; justify-content:center; padding:24px;">
-    <div style="width:100%; max-width:360px; background:rgba(255,255,255,0.9); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.75); border-radius:20px; padding:36px 28px; box-shadow:0 12px 32px rgba(44,31,26,0.10);">
-      <div style="text-align:center; margin-bottom:26px;">
-        <div style="font-family:'Cormorant Garamond',serif; font-size:30px; color:var(--deep-rose); margin-bottom:6px;"><span style="font-style:italic;">A Moment</span> That Lasts</div>
-        <div style="font-size:12px; color:var(--text-muted); line-height:1.7;">운영자 로그인 후<br>웨딩 사이트 생성 및 관리를 진행하세요</div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">아이디</div>
-        <input type="text" id="login-username" class="form-input" placeholder="아이디 입력" autocomplete="username" style="margin-bottom:0;">
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">비밀번호</div>
-        <input type="password" id="login-password" class="form-input" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter') handleOperatorLogin()" style="margin-bottom:0;">
-      </div>
-
-      <div id="login-error" style="min-height:18px; margin-bottom:12px; font-size:12px; color:var(--rose); text-align:center;"></div>
-
-      <button id="login-btn" class="btn-primary" onclick="handleOperatorLogin()">로그인</button>
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-brand"><em>A Moment</em> That Lasts</div>
+    <div class="login-sub">SERVICE ADMIN CONSOLE<br>운영자 로그인 후 웨딩 사이트 생성 및 관리를 진행하세요</div>
+    <div class="login-field">
+      <label for="login-id">아이디</label>
+      <input type="text" id="login-username" placeholder="아이디 입력" autocomplete="username">
     </div>
+    <div class="login-field">
+      <label for="login-pw">비밀번호</label>
+      <input type="password" id="login-password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter') handleOperatorLogin()">
+    </div>
+    <div id="login-error" style="min-height:18px;font-size:12px;color:var(--rose);text-align:center;"></div>
+    <button class="login-btn" id="login-btn" onclick="handleOperatorLogin()">로그인</button>
+    <div class="login-helper">운영자 전용 · 서비스 배포/관리 콘솔입니다</div>
   </div>
 </div>
 
-
-<!-- ── 운영자 홈 (대시보드) ── -->
+<!-- ══════════ OPERATOR HOME ══════════ -->
 <div id="screen-operator" class="screen">
-  <div class="admin-layout">
+  <div class="console-topbar">
+    <div class="console-topbar-left">
+      <button class="back-btn" onclick="goLogin()">← 로그아웃</button>
+    </div>
+    <div class="console-topbar-center">
+      <div class="console-topbar-title">A Moment That Lasts</div>
+      <div class="console-topbar-label">Admin Console / Dashboard</div>
+    </div>
+    <div class="console-topbar-right">
+      <span class="console-topbar-badge">운영자</span>
+    </div>
+  </div>
+
+  <div class="operator-layout">
     <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-title">A Moment<br>That Lasts</div>
-        <div class="brand-subtitle">SERVICE ADMIN CONSOLE</div>
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-title">A Moment<br>That Lasts</div>
+        <div class="sidebar-brand-sub">SERVICE ADMIN CONSOLE</div>
       </div>
-
-      <div class="nav-section-label">MAIN</div>
-      <button class="nav-item active">📊 대시보드</button>
-      <button class="nav-item" onclick="opGoCreate()">✨ 사이트 생성</button>
-      <button class="nav-item" onclick="opGoManage()">📋 사이트 관리</button>
-
-      <div class="nav-section-label">SYSTEM</div>
-      <button class="nav-item">🧾 운영 로그</button>
-
+      <div class="sidebar-nav-label">MAIN</div>
+      <button class="sidebar-item active" onclick="switchOperatorTab('home')">
+        <span class="sidebar-item-icon">📊</span><span>대시보드</span>
+      </button>
+      <button class="sidebar-item" onclick="switchOperatorTab('create')">
+        <span class="sidebar-item-icon">✨</span><span>사이트 생성</span>
+      </button>
+      <button class="sidebar-item" onclick="switchToManage()">
+        <span class="sidebar-item-icon">📋</span><span>사이트 관리</span>
+      </button>
+      <button class="sidebar-item" onclick="switchToAdmin()">
+        <span class="sidebar-item-icon">📸</span><span>업로드 관리</span>
+      </button>
+      <div class="sidebar-nav-label">SYSTEM</div>
+      <button class="sidebar-item">
+        <span class="sidebar-item-icon">🧾</span><span>운영 로그</span>
+      </button>
       <div class="sidebar-footer">
-        <strong>운영자 전용 화면</strong>
-        <p>신랑·신부 또는 하객에게 노출되지 않는 서비스 배포/관리 콘솔입니다.</p>
-        <button onclick="operatorLogout()" style="width:100%;margin-top:12px;padding:9px;border:1px solid rgba(139,74,56,.15);border-radius:12px;background:rgba(255,255,255,.5);color:var(--deep-rose);font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s">로그아웃</button>
+        <p>운영자 전용 화면<br>신랑·신부 또는 하객에게 노출되지 않는 서비스 배포/관리 콘솔입니다.</p>
       </div>
     </aside>
 
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <div class="breadcrumb">Admin Console / Dashboard</div>
-        </div>
-      </header>
+    <main class="main-area">
+      <!-- ── content panel: 대시보드 ── -->
+      <div id="panel-dashboard" class="content-panel active">
 
-      <!-- ── 시스템 상태 스크롤 티커 ── -->
-      <div class="status-ticker-wrap">
-        <div class="status-ticker-label">SYSTEM</div>
-        <div class="status-ticker-track">
-          <div class="status-ticker-inner" id="status-ticker-inner">
-            <span class="ticker-item">🟡 Spring Boot API — <span id="op-system-api">CHECKING</span></span>
+      <!-- 원본 느낌의 애니메이션 티커 — 직사각형으로 위+양옆에 붙음 -->
+      <div class="status-ticker-wrap" style="border-radius:0;background:rgba(44,31,26,.06);margin:0 -32px 26px;">
+        <div class="status-ticker-track" style="border-radius:0;">
+          <div class="status-ticker-inner" id="ticker-inner">
+            <span class="ticker-item">🟢 Spring Boot API — ONLINE</span>
             <span class="ticker-sep">◆</span>
-            <span class="ticker-item">🟡 MySQL Database — <span id="op-system-db">CHECKING</span></span>
+            <span class="ticker-item">🟢 MySQL Database — CONNECTED</span>
             <span class="ticker-sep">◆</span>
             <span class="ticker-item">🟢 QR Generator — ACTIVE</span>
             <span class="ticker-sep">◆</span>
-            <span class="ticker-item">🟡 Upload Directory — <span id="op-system-dashboard">CHECKING</span></span>
+            <span class="ticker-item">🟢 Upload Directory — LIVE</span>
             <span class="ticker-sep">◆</span>
-            <span class="ticker-item ticker-summary-item" id="ticker-summary">총 사이트 <span class="ts-sites" id="op-stat-total-sites-t">-</span>건 · 사진 <span class="ts-photos" id="op-stat-total-photos-t">-</span>장 · 하객 <span class="ts-guests" id="op-stat-total-guests-t">-</span>명</span>
+            <span class="ticker-item ticker-summary-item">총 사이트 <strong>22</strong>건 · 사진 <strong>11</strong>장 · 하객 <strong>13</strong>명</span>
+            <span class="ticker-sep">◆</span>
+            <!-- 복제본 (무한 스크롤용) -->
+            <span class="ticker-item">🟢 Spring Boot API — ONLINE</span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item">🟢 MySQL Database — CONNECTED</span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item">🟢 QR Generator — ACTIVE</span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item">🟢 Upload Directory — LIVE</span>
+            <span class="ticker-sep">◆</span>
+            <span class="ticker-item ticker-summary-item">총 사이트 <strong>22</strong>건 · 사진 <strong>11</strong>장 · 하객 <strong>13</strong>명</span>
             <span class="ticker-sep">◆</span>
           </div>
         </div>
       </div>
 
-      <section class="stats-grid">
+      <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">전체 생성 사이트</div>
-          <div class="stat-value"><span id="op-stat-total-sites">-</span></div>
+          <div class="stat-value">22</div>
           <div class="stat-caption">누적 이벤트 수</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">진행 예정 행사</div>
-          <div class="stat-value"><span id="op-stat-future-sites">-</span></div>
+          <div class="stat-value">5</div>
           <div class="stat-caption">QR 활성 대기</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">누적 업로드 사진</div>
-          <div class="stat-value"><span id="op-stat-total-photos">-</span></div>
+          <div class="stat-value">11</div>
           <div class="stat-caption">전체 이벤트 합산</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">참여 하객 수</div>
-          <div class="stat-value"><span id="op-stat-total-guests">-</span></div>
+          <div class="stat-value">13</div>
           <div class="stat-caption">게시물 작성 기준</div>
         </div>
-      </section>
+      </div>
 
-      <!-- ── 월별 결혼식 서비스 현황 차트 ── -->
-      <section class="monthly-chart-section">
+      <!-- 원본 SVG 라인차트 복원 -->
+      <div class="monthly-chart-section">
         <div class="monthly-chart-header">
-          <div>
-            <div class="eyebrow" style="font-size:11px; margin-bottom:10px;">MONTHLY ANALYTICS</div>
-            <h3 style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; color:var(--deep-rose); margin-bottom:6px;">월별 결혼식 서비스 현황</h3>
-            <p style="font-size:13px; color:var(--muted); line-height:1.6;">생성된 결혼식 사이트의 월별 추이를 확인합니다</p>
-          </div>
-        </div>
-        <div class="monthly-chart-body" id="chart-body">
-          <div class="chart-placeholder">데이터 로딩 중...</div>
-        </div>
-      </section>
-
-      <section class="section-grid" style="grid-template-columns:1fr;">
-        <div class="panel">
-          <div class="panel-head">
+          <div style="display:flex;align-items:center;gap:16px;">
             <div>
-              <h2>최근 생성된 사이트</h2>
-              <p>운영자가 관리 중인 웨딩 이벤트 목록입니다.</p>
+              <div class="panel-title" style="font-size:22px;">월별 결혼식 서비스 현황</div>
+              <div class="panel-sub" style="font-size:13px;">생성된 결혼식 사이트의 월별 추이를 확인합니다</div>
             </div>
           </div>
+        </div>
+        <div class="monthly-chart-body" id="chart-body"></div>
+      </div>
 
+      <!-- 두 패널: TODO + 최근 사이트 테이블 -->
+      <div class="panels-row">
+        <div class="panel" style="margin-bottom:0;">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">운영 메모</div>
+              <div class="panel-sub">체크하면 완료, 엔터로 추가</div>
+            </div>
+          </div>
+          <div class="todo-wrap" id="todo-list">
+            <div class="todo-item">
+              <div class="todo-cb" onclick="toggleTodo(this)"></div>
+              <span class="todo-text">오늘 결혼식 2건 QR 상태 확인</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-cb" onclick="toggleTodo(this)"></div>
+              <span class="todo-text">안성민♥백지우 행사 신규 업로드 확인</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-cb" onclick="toggleTodo(this)"></div>
+              <span class="todo-text">권영재♥류하란 D-2 — QR 테스트</span>
+            </div>
+          </div>
+          <div class="todo-input-row">
+            <input type="text" id="todo-input" placeholder="메모 추가 (예: QR 만료 3건 확인)" onkeydown="if(event.key==='Enter') addTodo()">
+            <button class="todo-add-btn" onclick="addTodo()">추가</button>
+          </div>
+        </div>
+
+        <!-- Right: 최근 생성 사이트 -->
+        <div class="panel" style="margin-bottom:0;">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">최근 생성된 사이트</div>
+              <div class="panel-sub">최근 5건</div>
+            </div>
+            <button class="panel-action" onclick="switchToManage()" style="font-size:12px;color:var(--rose);background:none;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:500;">전체보기 →</button>
+          </div>
           <table class="event-table">
             <thead>
-              <tr>
-                <th>이벤트</th>
-                <th>날짜</th>
-                <th>사진</th>
-                <th>상태</th>
-              </tr>
+              <tr><th>이벤트</th><th>날짜</th><th>사진</th><th>상태</th></tr>
             </thead>
-            <tbody id="op-recent-events-body">
-              <tr><td colspan="4" style="color:var(--muted);padding:18px 0;">불러오는 중...</td></tr>
+            <tbody>
+              <tr><td class="event-name">박민준 ♥ 김서연</td><td>2026-06-15</td><td>0</td><td><span class="status-pill future">예정</span></td></tr>
+              <tr><td class="event-name">권영재 ♥ 류하란</td><td>2026-06-02</td><td>2</td><td><span class="status-pill future">예정</span></td></tr>
+              <tr><td class="event-name">황민준 ♥ 서유진</td><td>2026-06-25</td><td>0</td><td><span class="status-pill future">예정</span></td></tr>
+              <tr><td class="event-name">장도현 ♥ 나예원</td><td>2026-06-20</td><td>0</td><td><span class="status-pill future">예정</span></td></tr>
+              <tr><td class="event-name">안성민 ♥ 백지우</td><td>2026-06-11</td><td>1</td><td><span class="status-pill future">예정</span></td></tr>
             </tbody>
           </table>
         </div>
-      </section>
-    </main>
-  </div>
-</div>
-
-<!-- ── 사이트 관리 화면 ── -->
-<div id="screen-manage" class="screen">
-  <div style="min-height:100vh; background:#F8F5F0; display:flex; flex-direction:column;">
-    <div style="background:rgba(255,255,255,0.92); border-bottom:1px solid var(--border); padding:16px 40px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:16px; min-width:0;">
-        <button class="console-back-btn" onclick="showScreen('operator')">← 홈</button>
-        <div>
-          <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; color:var(--deep-rose);"><span style="font-style:italic;">A Moment</span> That Lasts</div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">사이트 관리</div>
-        </div>
       </div>
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div id="manage-total" style="font-size:12px; color:var(--text-muted);">총 0건</div>
+    </div> <!-- /panel-dashboard -->
+
+    <!-- ── content panel: 사이트 관리 ── -->
+    <div id="panel-manage" class="content-panel">
+      <div class="manage-body" style="padding:24px 0 60px 0;">
+    <div class="manage-toolbar">
+      <div class="manage-search-wrap">
+        <span class="manage-search-icon">🔍</span>
+        <input class="manage-search-input" type="text" placeholder="커플명, 행사코드, 날짜로 찾기">
+      </div>
+      <select class="manage-sort">
+        <option>예식일 최신순</option>
+        <option>예식일 오래된순</option>
+        <option>생성일 최신순</option>
+        <option>사진 많은순</option>
+        <option>하객 많은순</option>
+      </select>
+      <div class="manage-filter-group">
+        <button class="manage-filter-btn active" onclick="setManageFilter(this, 'all')">전체</button>
+        <button class="manage-filter-btn" onclick="setManageFilter(this, 'today')">오늘</button>
+        <button class="manage-filter-btn" onclick="setManageFilter(this, 'future')">예정</button>
+        <button class="manage-filter-btn" onclick="setManageFilter(this, 'past')">지난</button>
       </div>
     </div>
 
-    <div style="flex:1; padding:32px 40px; overflow-y:auto; display:flex; flex-direction:column; gap:24px;">
-      <section class="manage-toolbar-card" style="margin-top:0;">
-        <div class="manage-search-wrap">
-          <label class="toolbar-label" for="manage-search">검색</label>
-          <input id="manage-search" class="manage-search-input" type="text" placeholder="커플명, 행사코드, 날짜로 찾기" oninput="setManageSearchKeyword(this.value)">
+    <!-- Today -->
+    <div class="manage-section" id="section-today">
+      <div class="manage-section-header">
+        <span class="manage-dot green"></span>
+        <span class="manage-section-title" style="color:#2E7D32;">오늘의 결혼식</span>
+        <span class="manage-count" id="count-today">2건</span>
+      </div>
+      <div class="site-card today-highlight">
+        <div class="card-left">
+          <div class="card-couple">이준호 <span class="heart">♥</span> 김미영</div>
+          <div class="card-info"><span>2026-05-31</span><span>evt-6d50</span></div>
         </div>
-        <div class="manage-sort-wrap">
-          <label class="toolbar-label" for="manage-sort">정렬</label>
-          <select id="manage-sort" class="manage-sort-select" onchange="setManageSort(this.value)">
-            <option value="weddingDateDesc">예식일 최신순</option>
-            <option value="weddingDateAsc">예식일 오래된순</option>
-            <option value="createdAtDesc">생성일 최신순</option>
-            <option value="photoCountDesc">사진 많은순</option>
-            <option value="guestCountDesc">하객 많은순</option>
-          </select>
+        <div class="card-dday today">D-DAY</div>
+        <div class="card-stats">
+          <span class="stat-chip"><strong>4</strong> 하객</span>
+          <span class="stat-chip"><strong>6</strong> 사진</span>
         </div>
-        <div class="manage-filter-wrap">
-          <button id="manage-filter-all" class="manage-filter-btn active" onclick="setManageStatusFilter('all')">전체</button>
-          <button id="manage-filter-today" class="manage-filter-btn" onclick="setManageStatusFilter('today')">오늘</button>
-          <button id="manage-filter-future" class="manage-filter-btn" onclick="setManageStatusFilter('future')">예정</button>
-          <button id="manage-filter-past" class="manage-filter-btn" onclick="setManageStatusFilter('past')">지난 행사</button>
+        <div class="card-actions">
+          <button class="act-btn">👥 하객 보기</button>
+          <button class="act-btn primary">📱 QR 관리</button>
+          <button class="act-btn">🔗 링크</button>
         </div>
-      </section>
+      </div>
+      <div class="site-card today-highlight" style="margin-bottom:0;">
+        <div class="card-left">
+          <div class="card-couple">송지호 <span class="heart">♥</span> 한예진</div>
+          <div class="card-info"><span>2026-05-31</span><span>evt-ab42</span></div>
+        </div>
+        <div class="card-dday today">D-DAY</div>
+        <div class="card-stats">
+          <span class="stat-chip"><strong>2</strong> 하객</span>
+          <span class="stat-chip"><strong>3</strong> 사진</span>
+        </div>
+        <div class="card-actions">
+          <button class="act-btn">👥 하객 보기</button>
+          <button class="act-btn primary">📱 QR 관리</button>
+          <button class="act-btn">🔗 링크</button>
+        </div>
+      </div>
+    </div>
 
-      <section id="manage-today-section" class="manage-section-card featured" style="padding:24px 26px;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-          <div style="width:10px; height:10px; border-radius:50%; background:#4CAF50; animation:pulse2 1.5s infinite;"></div>
-          <div class="manage-section-label-text" style="color:#2E7D32;">오늘의 결혼식</div>
-          <div id="today-count" class="manage-count-chip">0건</div>
+    <!-- Future -->
+    <div class="manage-section" id="section-future">
+      <div class="manage-section-header">
+        <span class="manage-dot gold"></span>
+        <span class="manage-section-title" style="color:var(--dark-gold);">예정된 결혼식</span>
+        <span class="manage-count" id="count-future">5건</span>
+      </div>
+      <div class="site-card">
+        <div class="card-left">
+          <div class="card-couple">황민준 <span class="heart">♥</span> 서유진</div>
+          <div class="card-info"><span>2026-06-25</span><span>d038cd</span></div>
         </div>
-        <div id="today-list" class="manage-today-grid"></div>
-      </section>
-
-      <section id="manage-future-section" class="manage-section-card" style="padding:24px 26px;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-          <div style="width:10px; height:10px; border-radius:50%; background:var(--gold);"></div>
-          <div class="manage-section-label-text" style="color:var(--dark-gold);">예정된 결혼식</div>
-          <div id="future-count" class="manage-count-chip">0건</div>
+        <div class="card-dday">D-25</div>
+        <div class="card-stats">
+          <span class="stat-chip"><strong>1</strong> 하객</span>
+          <span class="stat-chip"><strong>0</strong> 사진</span>
         </div>
-        <div id="future-list" class="manage-list-stack"></div>
-      </section>
+        <div class="card-actions">
+          <button class="act-btn">👥 하객 보기</button>
+          <button class="act-btn primary">📱 QR 관리</button>
+          <button class="act-btn">🔗 링크</button>
+        </div>
+      </div>
+      <div class="site-card">
+        <div class="card-left">
+          <div class="card-couple">장도현 <span class="heart">♥</span> 나예원</div>
+          <div class="card-info"><span>2026-06-20</span><span>65af29</span></div>
+        </div>
+        <div class="card-dday">D-20</div>
+        <div class="card-stats">
+          <span class="stat-chip"><strong>0</strong> 하객</span>
+          <span class="stat-chip"><strong>0</strong> 사진</span>
+        </div>
+        <div class="card-actions">
+          <button class="act-btn">👥 하객 보기</button>
+          <button class="act-btn primary">📱 QR 관리</button>
+          <button class="act-btn">🔗 링크</button>
+        </div>
+      </div>
+      <div class="site-card">
+        <div class="card-left">
+          <div class="card-couple">박민준 <span class="heart">♥</span> 김서연</div>
+          <div class="card-info"><span>2026-06-15</span><span>f9be23</span></div>
+        </div>
+        <div class="card-dday">D-15</div>
+        <div class="card-stats">
+          <span class="stat-chip"><strong>0</strong> 하객</span>
+          <span class="stat-chip"><strong>0</strong> 사진</span>
+        </div>
+        <div class="card-actions">
+          <button class="act-btn">👥 하객 보기</button>
+          <button class="act-btn primary">📱 QR 관리</button>
+          <button class="act-btn">🔗 링크</button>
+        </div>
+      </div>
+      <div class="site-card">
+        <div class="card-left">
+          <div class="card-couple">안성민 <span class="heart">♥</span> 백지우</div>
+          <div class="card-info"><span>2026-06-11</span><span>ca0fb7</span></div>
+        </div>
+        <div class="card-dday">D-11</div>
+        <div class="card-stats">
+          <span class="stat-chip"><strong>1</strong> 하객</span>
+          <span class="stat-chip"><strong>1</strong> 사진</span>
+        </div>
+        <div class="card-actions">
+          <button class="act-btn">👥 하객 보기</button>
+          <button class="act-btn primary">📱 QR 관리</button>
+          <button class="act-btn">🔗 링크</button>
+        </div>
+      </div>
+      <div class="site-card" style="margin-bottom:0;">
+        <div class="card-left">
+          <div class="card-couple">권영재 <span class="heart">♥</span> 류하란</div>
+          <div class="card-info"><span>2026-06-02</span><span>e617b6</span></div>
+        </div>
+        <div class="card-dday">D-2</div>
+        <div class="card-stats">
+          <span class="stat-chip"><strong>3</strong> 하객</span>
+          <span class="stat-chip"><strong>2</strong> 사진</span>
+        </div>
+        <div class="card-actions">
+          <button class="act-btn">👥 하객 보기</button>
+          <button class="act-btn primary">📱 QR 관리</button>
+          <button class="act-btn">🔗 링크</button>
+        </div>
+      </div>
+    </div>
 
-      <section id="manage-past-section" class="manage-section-card muted" style="padding:24px 26px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <div style="width:10px; height:10px; border-radius:50%; background:#9E9E9E;"></div>
-            <div class="manage-section-label-text" style="color:var(--text-muted);">지난 결혼식</div>
-            <div id="past-count" class="manage-count-chip">0건</div>
+    <!-- Past -->
+    <div class="manage-section" id="section-past" style="margin-bottom:0;">
+      <div class="manage-section-header">
+        <span class="manage-dot gray"></span>
+        <span class="manage-section-title" style="color:var(--text-muted);">지난 결혼식</span>
+        <span class="manage-count" id="count-past">15건</span>
+        <button onclick="togglePast()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:600;margin-left:8px;" id="past-toggle-btn">펼치기</button>
+      </div>
+      <div id="past-list" style="display:none;">
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple" style="color:var(--text-muted);">김민준 <span class="heart">♥</span> 이지은</div>
+            <div class="card-info"><span>2025-11-23</span><span>evt-p001</span></div>
           </div>
-          <button id="manage-past-toggle" class="panel-link-btn" onclick="togglePastSection()">펼치기</button>
+          <div class="card-dday" style="background:#E0D8D2;">D+189</div>
+          <div class="card-stats">
+            <span class="stat-chip"><strong>87</strong> 하객</span>
+            <span class="stat-chip"><strong>142</strong> 사진</span>
+          </div>
+          <div class="card-actions">
+            <button class="act-btn">👥 하객 보기</button>
+            <button class="act-btn danger">🚫 비활성화</button>
+          </div>
         </div>
-        <div id="past-list-wrap" class="manage-collapsible-wrap">
-          <div id="past-list" class="manage-list-stack"></div>
+        <div class="site-card">
+          <div class="card-left">
+            <div class="card-couple" style="color:var(--text-muted);">한승우 <span class="heart">♥</span> 오채원</div>
+            <div class="card-info"><span>2025-12-14</span><span>evt-p002</span></div>
+          </div>
+          <div class="card-dday" style="background:#E0D8D2;">D+168</div>
+          <div class="card-stats">
+            <span class="stat-chip"><strong>93</strong> 하객</span>
+            <span class="stat-chip"><strong>167</strong> 사진</span>
+          </div>
+          <div class="card-actions">
+            <button class="act-btn">👥 하객 보기</button>
+            <button class="act-btn danger">🚫 비활성화</button>
+          </div>
         </div>
-      </section>
+      </div>
+      </div>
     </div>
-  </div>
-</div>
+  </div> <!-- /panel-manage -->
 
-<style>
-@keyframes pulse2 { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-</style>
+  <!-- ── content panel: 업로드 관리 ── -->
+  <div id="panel-admin" class="content-panel">
+    <div class="admin-body" style="padding:24px 0 60px 0;">
+      <div class="admin-event-selector">
+      <div class="selector-label">💒 EVENT</div>
+      <!-- 원본 select 스타일과 동일하게 -->
+      <select id="admin-event-select" onchange="onEventChange(this.value)">
+        <option value="">행사를 선택해 주세요</option>
+        <option value="evt-1">이준호 ♥ 김미영 · 2026-05-31</option>
+        <option value="evt-2">송지호 ♥ 한예진 · 2026-05-31</option>
+        <option value="evt-3">황민준 ♥ 서유진 · 2026-06-25</option>
+        <option value="evt-4" selected>권영재 ♥ 류하란 · 2026-06-02</option>
+        <option value="evt-5">안성민 ♥ 백지우 · 2026-06-11</option>
+        <option value="evt-6">김민준 ♥ 이지은 · 2025-11-23</option>
+      </select>
+      <div class="admin-event-summary" id="event-summary">권영재 ♥ 류하란 · 2026-06-02 · 하객 3명 · 사진 2장</div>
+    </div>
+
+    <div class="admin-stats-row">
+      <div class="admin-stat-card">
+        <div class="admin-stat-value">2</div>
+        <div class="admin-stat-label">총 사진</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="admin-stat-value">3</div>
+        <div class="admin-stat-label">참여 하객</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="admin-stat-value">2</div>
+        <div class="admin-stat-label">메시지</div>
+      </div>
+    </div>
+
+    <div class="admin-filter-bar">
+      <div class="admin-filter-title">최근 업로드</div>
+      <div class="admin-filter-group">
+        <button class="admin-filter-btn active">전체</button>
+        <button class="admin-filter-btn">신랑측</button>
+        <button class="admin-filter-btn">신부측</button>
+      </div>
+    </div>
+
+    <div class="admin-grid" id="photo-grid">
+      <div class="admin-thumb">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23F3EDE3'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23E8C9BA'/%3E%3Crect x='60' y='120' width='80' height='60' rx='6' fill='%23C5826A' opacity='0.4'/%3E%3C/svg%3E" alt="">
+        <span class="thumb-badge">[신랑측] 홍길동 · 14:23</span>
+      </div>
+      <div class="admin-thumb">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23F3EDE3'/%3E%3Ccircle cx='70' cy='80' r='28' fill='%23E8C9BA'/%3E%3Ccircle cx='130' cy='80' r='28' fill='%23E8C9BA'/%3E%3Crect x='50' y='120' width='100' height='60' rx='6' fill='%23C9A96E' opacity='0.4'/%3E%3C/svg%3E" alt="">
+        <span class="thumb-badge">[신부측] 김철수 · 14:30</span>
+      </div>
+      <div class="admin-thumb">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23F3EDE3'/%3E%3Ccircle cx='100' cy='80' r='32' fill='%23E8C9BA'/%3E%3Crect x='55' y='120' width='90' height='55' rx='6' fill='%238B4A38' opacity='0.3'/%3E%3C/svg%3E" alt="">
+        <span class="thumb-badge">[신랑측] 최도현 · 15:01</span>
+      </div>
+      <div class="admin-thumb">
+        <div style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:4px;opacity:0.5;">📸</div>
+          <div>사진 더보기</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text-soft);margin-bottom:10px;">최근 게시물</div>
+      <div class="admin-message-list">
+        <div class="upload-item">
+          <div class="upload-item-thumbs">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23E8C9BA' rx='4'/%3E%3C/svg%3E" alt="">
+          </div>
+          <div class="upload-item-body">
+            <div class="upload-item-name">홍길동 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">신랑측 · 친구 · 14:23</span></div>
+            <div class="upload-item-msg">결혼 정말 축하해요! 두 분 평생 행복하세요 🎉</div>
+          </div>
+          <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">사진 1장 · ♥ 3</span>
+        </div>
+        <div class="upload-item">
+          <div class="upload-item-thumbs">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23E8C9BA' rx='4'/%3E%3C/svg%3E" alt="">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23E8C9BA' rx='4'/%3E%3C/svg%3E" alt="">
+          </div>
+          <div class="upload-item-body">
+            <div class="upload-item-name">김철수 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">신부측 · 직장동료 · 14:30</span></div>
+            <div class="upload-item-msg">너무 예쁜 결혼식이었어요 💕</div>
+          </div>
+          <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">사진 2장 · ♥ 5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-actions">
+      <button>📥 전체 다운로드</button>
+      <button>🔗 슬라이드쇼</button>
+    </div> <!-- /admin-actions -->
+  </div> <!-- /admin-body -->
+</div> <!-- /panel-admin -->
+
+    </main> <!-- /main-area -->
+  </div> <!-- /operator-layout -->
+</div> <!-- /screen-operator -->
 
 <!-- ── QR 발급 화면 ── -->
 <div id="screen-qr" class="screen">
@@ -296,7 +558,6 @@
               <h2>청첩장 업로드</h2>
             </div>
           </div>
-          <!-- 타입 토글 -->
           <div style="display:flex; background:var(--cream); border-radius:10px; padding:3px; margin-bottom:16px;">
             <button id="inv-type-img" onclick="setInvitationType('image')"
               style="flex:1; padding:8px; border:none; border-radius:8px; background:var(--white); color:var(--deep-rose); font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer; box-shadow:0 1px 3px var(--shadow); transition:all 0.2s; font-weight:500;">
@@ -307,7 +568,6 @@
               🔗 링크 삽입
             </button>
           </div>
-          <!-- 이미지 업로드 영역 -->
           <div id="inv-image-section">
             <div id="invitation-drop" onclick="document.getElementById('invitation-input').click()"
               style="border:1.5px dashed var(--blush); border-radius:12px; padding:32px 20px; text-align:center; cursor:pointer; transition:border-color 0.2s; background:var(--cream);"
@@ -322,7 +582,6 @@
               <button onclick="clearInvitation()" style="display:block; margin:8px auto 0; font-size:11px; color:var(--rose); border:none; background:transparent; cursor:pointer;">✕ 제거</button>
             </div>
           </div>
-          <!-- 링크 입력 영역 -->
           <div id="inv-url-section" style="display:none;">
             <input type="url" id="invitation-url-input" class="form-input"
               placeholder="https://toourguest.com/cards/..."
@@ -337,7 +596,6 @@
           </div>
         </article>
 
-        <!-- ── FAQ 설정 ── -->
         <article class="console-card">
           <div class="console-card-head with-meta">
             <div>
@@ -354,7 +612,6 @@
             </span>
           </div>
         </article>
-
       </section>
 
       <section class="qr-side-column">
@@ -382,7 +639,6 @@
               <h2>생성 준비 현황</h2>
             </div>
           </div>
-
           <div class="progress-section">
             <div class="progress-meta">
               <span id="create-progress-text" class="progress-label">아직 기본 정보 입력 전입니다</span>
@@ -392,7 +648,6 @@
               <div id="create-progress-fill" class="progress-fill"></div>
             </div>
           </div>
-
           <div class="summary-list">
             <div class="summary-item"><span class="summary-label">커플 정보</span><span class="summary-value" id="create-couple-summary">이름 입력 대기</span></div>
             <div class="summary-item"><span class="summary-label">예식 일정</span><span class="summary-value" id="create-date-summary">날짜 미선택</span></div>
@@ -429,7 +684,6 @@
         </article>
       </section>
     </main>
-
   </div>
 </div>
 
@@ -455,9 +709,7 @@
       QR 코드를 스캔하여 입장하셨습니다<br>
       소중한 순간을 함께 기록해 주세요
     </div>
-
     <div style="font-size:72px; margin: 24px 0;">💌</div>
-
     <div class="nickname-form">
       <div style="display:flex; gap:8px; margin-bottom:12px;">
         <input type="text" class="form-input" id="nickname-input" placeholder="이름 입력 (최대 5글자)" maxlength="5" style="margin-bottom:0; flex:1; min-width:0; color:var(--text);" oninput="this.style.color='var(--text)'">
@@ -845,9 +1097,10 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="js/state.js?v=20260522d"></script>
-<script src="js/api.js?v=20260522d"></script>
-<script src="js/ui.js?v=20260530e"></script>
+<script src="js/state.js?v=20260601a"></script>
+<script src="js/api.js?v=20260601a"></script>
+<script src="js/operator.js?v=20260601a"></script>
+<script src="js/ui.js?v=20260601a"></script>
 <script src="js/gallery.js?v=20260522d"></script>
 <script src="js/upload.js?v=20260522d"></script>
 <script src="js/admin.js?v=20260530b"></script>

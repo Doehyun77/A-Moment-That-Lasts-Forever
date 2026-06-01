@@ -19,7 +19,11 @@ function showScreen(name, skipHistory = false) {
     document.querySelectorAll('.screen-body').forEach(b => b.style.display = 'none');
     document.getElementById('screen-' + name).classList.add('active');
     if (name === 'admin') renderAdminGrid();
-    if (name === 'operator') renderOperatorDashboard();
+    if (name === 'operator') {
+      renderOperatorDashboard();
+      if (typeof switchPanel === 'function') switchPanel('panel-dashboard');
+      if (typeof updateSidebar === 'function') updateSidebar();
+    }
     return;
   }
 
@@ -605,10 +609,13 @@ function opGoCreate() {
 }
 
 async function opGoManage() {
-  document.getElementById('screen-operator').classList.remove('active');
-  document.getElementById('screen-manage').classList.add('active');
-  currentScreenName = 'manage';
-  await renderManageScreen();
+  goLogin();
+  // Quick way: go to operator home and switch to manage panel
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-operator').classList.add('active');
+  switchPanel('panel-manage');
+  activateSidebar(2);
+  currentScreenName = 'operator';
 }
 
 async function opGoUploads() {
