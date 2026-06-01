@@ -1,8 +1,33 @@
 const BASE_URL = '';
 
+async function api_readJson(res, fallback = {}) {
+    const text = await res.text();
+    if (!text) return fallback;
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        if (Array.isArray(fallback)) {
+            return fallback;
+        }
+
+        if (res.ok) {
+            const snippet = text.slice(0, 120).replace(/\s+/g, ' ').trim();
+            console.warn('API JSON parse fallback:', res.url, snippet);
+        }
+
+        return {
+            ...fallback,
+            success: false,
+            authenticated: false,
+            error: '서버 응답을 확인할 수 없어요.'
+        };
+    }
+}
+
 async function api_listEvents() {
     const res = await fetch(`${BASE_URL}/api/events`);
-    return await res.json();
+    return await api_readJson(res, []);
 }
 
 async function api_createEvent(groomName, brideName, weddingDate = '', qrStartDate = '', qrEndDate = '') {
@@ -11,12 +36,12 @@ async function api_createEvent(groomName, brideName, weddingDate = '', qrStartDa
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groomName, brideName, weddingDate, qrStartDate, qrEndDate })
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_fetchEvent(eventCode) {
     const res = await fetch(`${BASE_URL}/api/events/${eventCode}`);
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_uploadEventPhotos(eventCode, invitationFile, photoFiles) {
@@ -27,14 +52,14 @@ async function api_uploadEventPhotos(eventCode, invitationFile, photoFiles) {
         method: 'POST',
         body: form
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_deleteEvent(eventCode) {
     const res = await fetch(`${BASE_URL}/api/events/${eventCode}`, {
         method: 'DELETE'
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_enterGuestSession(guestData) {
@@ -43,12 +68,12 @@ async function api_enterGuestSession(guestData) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(guestData)
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_getGuestSession(eventCode) {
     const res = await fetch(`${BASE_URL}/api/guest-session?eventCode=${encodeURIComponent(eventCode)}`);
-    return await res.json();
+    return await api_readJson(res, { authenticated: false });
 }
 
 async function api_clearGuestSession(eventCode) {
@@ -56,7 +81,7 @@ async function api_clearGuestSession(eventCode) {
     const res = await fetch(`${BASE_URL}/api/guest-session${suffix}`, {
         method: 'DELETE'
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_adminLogin(code) {
@@ -65,19 +90,19 @@ async function api_adminLogin(code) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_adminLogout() {
     const res = await fetch(`${BASE_URL}/api/admin-session`, {
         method: 'DELETE'
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_adminStatus() {
     const res = await fetch(`${BASE_URL}/api/admin-session`);
-    return await res.json();
+    return await api_readJson(res, { authenticated: false });
 }
 
 async function api_uploadPost(postData, photoFiles) {
@@ -96,14 +121,14 @@ async function api_uploadPost(postData, photoFiles) {
         body: form
     });
 
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_fetchPosts() {
     if (!currentEventCode) return [];
 
     const res = await fetch(`${BASE_URL}/api/posts?eventCode=${encodeURIComponent(currentEventCode)}`);
-    return await res.json();
+    return await api_readJson(res, []);
 }
 
 async function api_deletePost(postId) {
@@ -111,14 +136,14 @@ async function api_deletePost(postId) {
         method: 'DELETE'
     });
 
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_toggleLike(postId) {
     const res = await fetch(`${BASE_URL}/api/posts/${postId}/like-toggle`, {
         method: 'POST'
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 // ── Operator Console Auth ─────────────────────
@@ -129,19 +154,19 @@ async function api_operatorLogin(username, password) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_operatorStatus() {
     const res = await fetch(`${BASE_URL}/api/operator/status`);
-    return await res.json();
+    return await api_readJson(res, { authenticated: false });
 }
 
 async function api_operatorLogout() {
     const res = await fetch(`${BASE_URL}/api/operator/logout`, {
         method: 'DELETE'
     });
-    return await res.json();
+    return await api_readJson(res);
 }
 
 async function api_downloadPhoto(src, index) {

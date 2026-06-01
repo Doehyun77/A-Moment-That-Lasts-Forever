@@ -69,6 +69,26 @@ function openPinSetModal() {
   submitUpload();
 }
 
+function updatePinDots() {
+  const value = (document.getElementById('delete-pin-input')?.value || '').slice(0, 4);
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    if (!dot) continue;
+    dot.classList.toggle('filled', i < value.length);
+    dot.style.background = i < value.length ? 'var(--deep-rose)' : 'var(--line, #E7DED8)';
+  }
+}
+
+function closePinSetModal() {
+  const modal = document.getElementById('pin-set-modal');
+  const input = document.getElementById('delete-pin-input');
+  const error = document.getElementById('pin-set-error');
+  if (modal) modal.style.display = 'none';
+  if (input) input.value = '';
+  if (error) error.textContent = '';
+  updatePinDots();
+}
+
 // ── 게시물 공유 ───────────────────────────────────
 
 function submitUpload() {

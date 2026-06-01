@@ -367,7 +367,8 @@ function generateQRCode() {
 }
 
 function clearQR() {
-    document.getElementById('qr-output').style.display = 'none';
+    const qrOutput = document.getElementById('qr-output');
+    if (qrOutput) qrOutput.style.display = 'none';
     refreshCreateWorkspace();
 }
 
@@ -382,13 +383,15 @@ function downloadQR() {
 }
 
 function goToEntry() {
-    const groom = document.getElementById('qr-groom').value.trim();
-    const bride = document.getElementById('qr-bride').value.trim();
-    if (groom) document.getElementById('groom-name').textContent = groom;
-    if (bride) document.getElementById('bride-name').textContent = bride;
+    const groom = document.getElementById('qr-groom')?.value.trim() || '';
+    const bride = document.getElementById('qr-bride')?.value.trim() || '';
+    if (groom && document.getElementById('groom-name')) document.getElementById('groom-name').textContent = groom;
+    if (bride && document.getElementById('bride-name')) document.getElementById('bride-name').textContent = bride;
     if (groom && bride) document.querySelectorAll('.nav-couple').forEach(el => el.textContent = groom + ' ♥ ' + bride);
-    document.getElementById('screen-qr').classList.remove('active');
-    document.getElementById('screen-landing').classList.add('active');
+    const qrScreen = document.getElementById('screen-qr');
+    if (qrScreen) qrScreen.classList.remove('active');
+    const landingScreen = document.getElementById('screen-landing');
+    if (landingScreen) landingScreen.classList.add('active');
     currentScreenName = 'landing';
 }
 
@@ -585,7 +588,7 @@ window.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
 
     if (params.get('mode') === 'entry') {
-        ['screen-operator','screen-manage','screen-qr','screen-admin','screen-login'].forEach(id => {
+        ['screen-operator','screen-manage','screen-admin','screen-login'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.remove('active');
         });
@@ -650,7 +653,7 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    if (document.getElementById('screen-qr')) {
+    if (document.getElementById('panel-create') || document.getElementById('screen-qr')) {
         updateChecklist();
         refreshCreateWorkspace();
     }

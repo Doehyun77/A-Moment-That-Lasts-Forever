@@ -116,19 +116,47 @@ async function adminGoHome() {
   showToast('운영자 홈으로 이동했어요');
 }
 
+function getAdminDom(context) {
+  const isOperator = context === 'panel-admin' || document.getElementById('panel-admin')?.classList.contains('active');
+  if (isOperator) {
+    return {
+      context: 'panel-admin',
+      select: document.getElementById('operator-admin-event-select'),
+      summary: document.getElementById('operator-admin-event-summary'),
+      grid: document.getElementById('operator-admin-grid'),
+      messageList: document.getElementById('operator-admin-message-list'),
+      messageCountLabel: document.getElementById('operator-admin-message-count-label'),
+      photoCount: document.getElementById('operator-admin-photo-count'),
+      guestCount: document.getElementById('operator-admin-guest-count'),
+      messageCount: document.getElementById('operator-admin-message-count'),
+      filterMap: { all: 'operator-admin-filter-all', '신랑': 'operator-admin-filter-groom', '신부': 'operator-admin-filter-bride' }
+    };
+  }
+
+  return {
+    context: 'screen-admin',
+    grid: document.querySelector('#screen-admin #admin-grid'),
+    filterMap: { all: 'admin-filter-all', '신랑': 'admin-filter-groom', '신부': 'admin-filter-bride' },
+    statValues: document.querySelectorAll('#screen-admin .stat-card .stat-value')
+  };
+}
+
 // ── 그리드 렌더링 ─────────────────────────────────
 
-function setAdminFilter(filter) {
+function setAdminFilter(filter, context) {
   adminFilter = filter;
-  const map = { all: 'admin-filter-all', '신랑': 'admin-filter-groom', '신부': 'admin-filter-bride' };
-  Object.entries(map).forEach(([key, id]) => {
-    const btn = document.getElementById(id);
-    const isActive = key === filter;
-    btn.style.background = isActive ? 'var(--white)' : 'transparent';
-    btn.style.color = isActive ? 'var(--deep-rose)' : 'var(--text-muted)';
-    btn.style.boxShadow = isActive ? '0 1px 3px var(--shadow)' : 'none';
+  ['panel-admin', 'screen-admin'].forEach((ctx) => {
+    const dom = getAdminDom(context || ctx);
+    Object.entries(dom.filterMap).forEach(([key, id]) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const isActive = key === filter;
+      btn.style.background = isActive ? 'var(--white)' : 'transparent';
+      btn.style.color = isActive ? 'var(--deep-rose)' : 'var(--text-muted)';
+      btn.style.boxShadow = isActive ? '0 1px 3px var(--shadow)' : 'none';
+    });
   });
-  renderAdminGrid();
+  renderAdminGrid(context);
 }
 
 function getAdminSelectedEvent() {
@@ -145,8 +173,8 @@ function normalizeAdminSideLabel(side) {
   return String(side).replace(/측$/,'');
 }
 
-function renderAdminEventSummary() {
-  const summary = document.getElementById('admin-event-summary');
+function renderAdminEventSummary(context) {
+  const summary = getAdminDom(context).summary;
   const selected = getAdminSelectedEvent();
   if (!summary) return;
   if (!selected) {
@@ -156,8 +184,8 @@ function renderAdminEventSummary() {
   summary.textContent = `${selected.groomName} ♥ ${selected.brideName} · ${selected.weddingDate || '-'} · 하객 ${selected.guestCount || 0}명 · 사진 ${selected.photoCount || 0}장`;
 }
 
-function renderAdminEventOptions() {
-  const select = document.getElementById('admin-event-select');
+function renderAdminEventOptions(context = 'panel-admin') {
+  const select = getAdminDom(context).select;
   if (!select) return;
   const previous = adminEventCode;
   select.innerHTML = '<option value="">행사를 선택해 주세요</option>';
@@ -171,7 +199,7 @@ function renderAdminEventOptions() {
   if (!adminEvents.length) {
     adminEventCode = '';
     select.value = '';
-    renderAdminEventSummary();
+    renderAdminEventSummary(context);
     return;
   }
 
@@ -183,10 +211,10 @@ function renderAdminEventOptions() {
   }
 
   select.value = adminEventCode;
-  renderAdminEventSummary();
+  renderAdminEventSummary(context);
 }
 
-async function loadAdminEvents() {
+async function loadAdminEvents(renderAfterLoad = false, context = 'panel-admin') {
   try {
     const events = await api_listEvents();
     adminEvents = [...events].sort((a, b) => (b.weddingDate || '').localeCompare(a.weddingDate || ''));
@@ -194,21 +222,25 @@ async function loadAdminEvents() {
     console.error('행사 목록 로드 실패:', e);
     adminEvents = [];
   }
-  renderAdminEventOptions();
+  renderAdminEventOptions(context);
+  if (renderAfterLoad) {
+    await renderAdminGrid(context);
+  }
 }
 
-async function setAdminEventCode(eventCode) {
+async function setAdminEventCode(eventCode, context = 'panel-admin') {
   adminEventCode = eventCode || '';
   currentEventCode = adminEventCode;
-  const select = document.getElementById('admin-event-select');
+  const select = getAdminDom(context).select;
   if (select && select.value !== adminEventCode) select.value = adminEventCode;
-  renderAdminEventSummary();
-  await renderAdminGrid();
+  renderAdminEventSummary(context);
+  await renderAdminGrid(context);
 }
 
-function renderAdminMessageList(filteredPosts) {
-  const list = document.getElementById('admin-message-list');
-  const count = document.getElementById('admin-message-count');
+function renderAdminMessageList(filteredPosts, context = 'panel-admin') {
+  const dom = getAdminDom(context);
+  const list = dom.messageList;
+  const count = dom.messageCountLabel;
   if (!list || !count) return;
 
   const selected = getAdminSelectedEvent();
@@ -246,19 +278,21 @@ function renderAdminMessageList(filteredPosts) {
   });
 }
 
-async function renderAdminGrid() {
-  if (!adminEvents.length) {
-    await loadAdminEvents();
+async function renderAdminGrid(context = 'panel-admin') {
+  const dom = getAdminDom(context);
+
+  if (dom.context === 'panel-admin' && !adminEvents.length) {
+    await loadAdminEvents(false, context);
   }
 
-  if (!adminEventCode && adminEvents.length) {
-    renderAdminEventOptions();
+  if (dom.context === 'panel-admin' && !adminEventCode && adminEvents.length) {
+    renderAdminEventOptions(context);
   }
   currentEventCode = adminEventCode;
 
   await loadPosts();
 
-  const grid = document.getElementById('admin-grid');
+  const grid = dom.grid;
   if (!grid) return;
 
   const filteredPosts = getAdminFilteredPosts();
@@ -276,27 +310,22 @@ async function renderAdminGrid() {
   const totalPhotos = posts.flatMap(p => p.photos || []).length;
   const totalGuests = posts.length;
   const totalMessages = posts.filter(p => p.msg && p.msg !== '(사진만 공유)').length;
-  // Guest screen-admin stats
-  const s1 = document.querySelector('.stat-card:nth-child(1) .stat-value');
-  const s2 = document.querySelector('.stat-card:nth-child(2) .stat-value');
-  const s3 = document.querySelector('.stat-card:nth-child(3) .stat-value');
-  if (s1) s1.textContent = totalPhotos;
-  if (s2) s2.textContent = totalGuests;
-  if (s3) s3.textContent = totalMessages;
-  // Operator panel-admin stats
-  const ap = document.getElementById('admin-photo-count');
-  const ag = document.getElementById('admin-guest-count');
-  const am = document.getElementById('admin-message-count');
-  if (ap) ap.textContent = totalPhotos;
-  if (ag) ag.textContent = totalGuests;
-  if (am) am.textContent = totalMessages;
+
+  if (dom.statValues?.length >= 3) {
+    dom.statValues[0].textContent = totalPhotos;
+    dom.statValues[1].textContent = totalGuests;
+    dom.statValues[2].textContent = totalMessages;
+  }
+  if (dom.photoCount) dom.photoCount.textContent = totalPhotos;
+  if (dom.guestCount) dom.guestCount.textContent = totalGuests;
+  if (dom.messageCount) dom.messageCount.textContent = totalMessages;
 
   grid.innerHTML = '';
   if (!adminEventCode) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text-muted);">
       <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">🗂️</div>
       <div style="font-size:13px;">확인할 결혼식을 먼저 선택해 주세요</div></div>`;
-    renderAdminMessageList([]);
+    renderAdminMessageList([], context);
     return;
   }
 
@@ -305,7 +334,7 @@ async function renderAdminGrid() {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text-muted);">
       <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">📂</div>
       <div style="font-size:13px;">${msg}</div></div>`;
-    renderAdminMessageList(filteredPosts);
+    renderAdminMessageList(filteredPosts, context);
     return;
   }
 
@@ -330,7 +359,7 @@ async function renderAdminGrid() {
     grid.appendChild(wrap);
   });
 
-  renderAdminMessageList(filteredPosts);
+  renderAdminMessageList(filteredPosts, context);
 }
 
 function adminDownloadPhoto(src, i) {
@@ -392,6 +421,27 @@ function confirmDelete(postId, adminForce = false) {
   } else {
     deleteTargetPostId = null;
   }
+}
+
+function updateConfirmDots() {
+  const value = (document.getElementById('delete-pin-confirm')?.value || '').slice(0, 4);
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`cdot-${i}`);
+    if (!dot) continue;
+    dot.classList.toggle('filled', i < value.length);
+    dot.style.background = i < value.length ? 'var(--deep-rose)' : 'var(--line, #E7DED8)';
+  }
+}
+
+function closeDeleteModal() {
+  const modal = document.getElementById('delete-modal');
+  const input = document.getElementById('delete-pin-confirm');
+  const error = document.getElementById('delete-pin-error');
+  if (modal) modal.style.display = 'none';
+  if (input) input.value = '';
+  if (error) error.textContent = '';
+  updateConfirmDots();
+  deleteTargetPostId = null;
 }
 
 async function deletePost(adminForce = false) {

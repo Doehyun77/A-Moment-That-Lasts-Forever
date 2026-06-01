@@ -14,25 +14,35 @@ function showScreen(name, skipHistory = false) {
 
   if (name === 'landing' || name === 'admin' || name === 'qr' || name === 'operator' || name === 'login') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('slide-wrapper').style.display = 'none';
-    document.getElementById('main-nav').style.display = 'none';
+    const slideWrapper = document.getElementById('slide-wrapper');
+    const mainNav = document.getElementById('main-nav');
+    if (slideWrapper) slideWrapper.style.display = 'none';
+    if (mainNav) mainNav.style.display = 'none';
     document.querySelectorAll('.screen-body').forEach(b => b.style.display = 'none');
-    document.getElementById('screen-' + name).classList.add('active');
-    if (name === 'admin') renderAdminGrid();
+    const screen = document.getElementById('screen-' + name);
+    if (screen) screen.classList.add('active');
+    if (name === 'admin') renderAdminGrid('screen-admin');
     if (name === 'operator') {
-      renderOperatorDashboard();
-      if (typeof switchPanel === 'function') switchPanel('panel-dashboard');
-      if (typeof updateSidebar === 'function') updateSidebar();
+      if (typeof goHome === 'function') goHome();
+      else {
+        renderOperatorDashboard();
+        if (typeof switchPanel === 'function') switchPanel('panel-dashboard');
+        if (typeof updateSidebar === 'function') updateSidebar();
+      }
     }
     return;
   }
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('main-nav').style.display = 'flex';
-  document.getElementById('slide-wrapper').style.display = 'block';
+  const mainNav = document.getElementById('main-nav');
+  const slideWrapper = document.getElementById('slide-wrapper');
+  if (mainNav) mainNav.style.display = 'flex';
+  if (slideWrapper) slideWrapper.style.display = 'block';
 
-  document.getElementById('nav-upload-btn').className = name === 'upload' ? 'active' : '';
-  document.getElementById('nav-gallery-btn').className = name === 'gallery' ? 'active' : '';
+  const navUploadBtn = document.getElementById('nav-upload-btn');
+  const navGalleryBtn = document.getElementById('nav-gallery-btn');
+  if (navUploadBtn) navUploadBtn.className = name === 'upload' ? 'active' : '';
+  if (navGalleryBtn) navGalleryBtn.className = name === 'gallery' ? 'active' : '';
 
   const nextEl = document.getElementById('screen-' + name);
   const prevEl = (prev === 'upload' || prev === 'gallery') ? document.getElementById('screen-' + prev) : null;
@@ -58,7 +68,7 @@ function showScreen(name, skipHistory = false) {
     nextEl.classList.add('is-active');
   }
 
-  if (name === 'gallery') renderTimeline();
+  if (name === 'gallery' && typeof renderTimeline === 'function') renderTimeline();
 }
 
 function goBack(from) {
@@ -556,13 +566,13 @@ function closeWeddingPhotoModal() {
 }
 
 function openMenu() {
-  document.getElementById('menu-panel').classList.add('open');
-  document.getElementById('menu-overlay').classList.add('open');
+  document.getElementById('menu-panel')?.classList.add('open');
+  document.getElementById('menu-overlay')?.classList.add('open');
 }
 
 function closeMenu() {
-  document.getElementById('menu-panel').classList.remove('open');
-  document.getElementById('menu-overlay').classList.remove('open');
+  document.getElementById('menu-panel')?.classList.remove('open');
+  document.getElementById('menu-overlay')?.classList.remove('open');
 }
 
 function showToast(msg) {
@@ -609,41 +619,51 @@ async function opGoUploads() {
 // ── Operator Console Login / Logout ──────────
 
 async function handleOperatorLogin() {
-  const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value;
+  const username = document.getElementById('login-username')?.value.trim() || '';
+  const password = document.getElementById('login-password')?.value || '';
   const errorEl = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
 
   if (!username || !password) {
-    errorEl.textContent = '아이디와 비밀번호를 입력해 주세요';
+    if (errorEl) errorEl.textContent = '아이디와 비밀번호를 입력해 주세요';
     return;
   }
 
-  errorEl.textContent = '';
-  btn.disabled = true;
-  btn.innerHTML = '<span class="login-spinner"></span> 확인 중';
+  if (errorEl) errorEl.textContent = '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="login-spinner"></span> 확인 중';
+  }
 
   try {
     const result = await api_operatorLogin(username, password);
     if (result.success) {
-      document.getElementById('login-username').value = '';
-      document.getElementById('login-password').value = '';
-      showScreen('operator');
-    } else {
+      const loginUsername = document.getElementById('login-username');
+      const loginPassword = document.getElementById('login-password');
+      if (loginUsername) loginUsername.value = '';
+      if (loginPassword) loginPassword.value = '';
+      if (typeof goHome === 'function') {
+        await goHome();
+      } else {
+        showScreen('operator');
+      }
+    } else if (errorEl) {
       errorEl.textContent = result.error || '로그인에 실패했어요';
     }
   } catch (e) {
-    errorEl.textContent = '서버 연결에 실패했어요';
+    if (errorEl) errorEl.textContent = '서버 연결에 실패했어요';
     console.error('Operator login error:', e);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '로그인';
+    }
   }
-
-  btn.disabled = false;
-  btn.innerHTML = '로그인';
 }
 
-async function operatorLogout() {
-  const ok = window.confirm('운영자 콘솔에서 로그아웃할까요?');
-  if (!ok) return;
+async function operatorLogout(skipConfirm = false) {
+  const ok = skipConfirm || window.confirm('운영자 콘솔에서 로그아웃할까요?');
+  if (!ok) return false;
 
   try {
     await api_operatorLogout();
@@ -651,20 +671,28 @@ async function operatorLogout() {
     console.error('Operator logout error:', e);
   }
 
-  // Admin 세션도 함께 정리
   try {
     await api_adminLogout();
   } catch (e) {
-    // 무시
+    console.warn('Admin session cleanup skipped:', e);
   }
 
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('main-nav').style.display = 'none';
-  document.getElementById('slide-wrapper').style.display = 'none';
-  document.querySelectorAll('.screen-body').forEach(b => b.style.display = 'none');
-  document.getElementById('screen-login').classList.add('active');
-  currentScreenName = 'login';
+  adminEventCode = '';
+  adminEvents = [];
+  currentEventCode = '';
+  currentEventInfo = null;
+  posts = [];
+  screenHistory = [];
+
+  if (typeof goLogin === 'function') {
+    await goLogin(true);
+  } else {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-login')?.classList.add('active');
+    currentScreenName = 'login';
+  }
   showToast('로그아웃 되었습니다');
+  return true;
 }
 
 function opStatusClass(status) {
@@ -895,7 +923,8 @@ function openTimelineModal() {
 }
 
 function closeTimelineModal() {
-  document.getElementById('timeline-menu-modal').style.display = 'none';
+  const modal = document.getElementById('timeline-menu-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 function openFaqModal() {
@@ -916,13 +945,15 @@ function openFaqModal() {
 }
 
 function closeFaqModal() {
-  document.getElementById('faq-menu-modal').style.display = 'none';
+  const modal = document.getElementById('faq-menu-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 function openGuestIdentityModal() {
   const summary = document.getElementById('guest-identity-summary');
   const note = document.getElementById('guest-identity-note');
-  if (!summary || !note) return;
+  const modal = document.getElementById('guest-identity-modal');
+  if (!summary || !note || !modal) return;
 
   const hasIdentity = !!(currentNick || currentNickname || currentCategory || currentSide);
   if (hasIdentity) {
@@ -935,11 +966,12 @@ function openGuestIdentityModal() {
     note.textContent = '입장 화면으로 돌아가 새 정보를 입력할 수 있어요.';
   }
 
-  document.getElementById('guest-identity-modal').style.display = 'flex';
+  modal.style.display = 'flex';
 }
 
 function closeGuestIdentityModal() {
-  document.getElementById('guest-identity-modal').style.display = 'none';
+  const modal = document.getElementById('guest-identity-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 // ── 초기화 ──────────────────────────────
@@ -949,13 +981,15 @@ async function initApp() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'entry') return;
 
-  // 티커 무한 스크롤을 위해 내용 복제 (복사본 ID 제거로 duplicate-ID 방지)
+  // 티커 무한 스크롤을 위해 내용 복제 (한 번만 수행)
   const tickerInner = document.getElementById('status-ticker-inner');
-  if (tickerInner) {
-    const originalChildCount = tickerInner.children.length;
-    tickerInner.innerHTML += tickerInner.innerHTML;
-    // 뒤쪽 복사본의 모든 ID 속성 제거 (getElementById 오동작 방지)
+  if (tickerInner && !tickerInner.dataset.clonedOnce) {
+    const originalMarkup = tickerInner.innerHTML;
+    tickerInner.innerHTML = originalMarkup + originalMarkup;
+    tickerInner.dataset.clonedOnce = 'true';
+
     const allChildren = Array.from(tickerInner.children);
+    const originalChildCount = allChildren.length / 2;
     for (let i = originalChildCount; i < allChildren.length; i++) {
       if (allChildren[i].id) allChildren[i].removeAttribute('id');
       allChildren[i].querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
@@ -967,19 +1001,19 @@ async function initApp() {
     renderOperatorDashboard();
   }
 
-  // 운영자 세션 확인
   try {
     const status = await api_operatorStatus();
     if (status && status.authenticated) {
-      showScreen('operator');
+      if (typeof goHome === 'function') await goHome();
+      else showScreen('operator');
       return;
     }
   } catch (e) {
     console.error('Operator session check failed:', e);
   }
 
-  // 로그인 화면 — username에 포커스
-  document.getElementById('login-username').focus();
+  const loginUsername = document.getElementById('login-username');
+  if (loginUsername) loginUsername.focus();
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
