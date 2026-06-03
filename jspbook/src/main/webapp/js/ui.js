@@ -12,7 +12,7 @@ function showScreen(name, skipHistory = false) {
   if (!skipHistory && prev !== 'landing') screenHistory.push(prev);
   currentScreenName = name;
 
-  if (name === 'landing' || name === 'admin' || name === 'qr' || name === 'operator' || name === 'login') {
+  if (name === 'landing' || name === 'admin' || name === 'operator' || name === 'login') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const slideWrapper = document.getElementById('slide-wrapper');
     const mainNav = document.getElementById('main-nav');
@@ -510,13 +510,6 @@ function openSiteManagePreview(site, status) {
 }
 
 // ── 청첩장 / 웨딩사진 ──────────────────
-const DUMMY_INVITATION = 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&q=80';
-const DUMMY_WEDDING_PHOTOS = [
-  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&q=80',
-  'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=400&q=80',
-  'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400&q=80',
-  'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&q=80'
-];
 
 function showInvitationScreen() {
   const modal   = document.getElementById('invitation-modal');
@@ -524,18 +517,26 @@ function showInvitationScreen() {
   const urlView = document.getElementById('invitation-url-view');
   const imgEl   = document.getElementById('invitation-display-img');
   const ifrEl   = document.getElementById('invitation-display-iframe');
+  if (!modal || !imgView || !urlView || !imgEl || !ifrEl) return;
 
   const useUrl = typeof invitationType !== 'undefined'
     && invitationType === 'url'
     && typeof invitationUrl !== 'undefined'
     && !!invitationUrl;
 
+  const useImage = typeof invitationData !== 'undefined' && !!invitationData;
+
+  if (!useUrl && !useImage) {
+    showToast('등록된 청첩장이 아직 없어요');
+    return;
+  }
+
   if (useUrl) {
     imgView.style.display = 'none';
     urlView.style.display = 'flex';
     ifrEl.src = invitationUrl;
   } else {
-    imgEl.src = invitationData || DUMMY_INVITATION;
+    imgEl.src = invitationData;
     imgView.style.display = 'flex';
     urlView.style.display = 'none';
   }
@@ -549,9 +550,18 @@ function closeInvitationModal() {
 }
 
 function showWeddingPhotoScreen() {
-  const photos = weddingPhotos.length > 0 ? weddingPhotos : DUMMY_WEDDING_PHOTOS;
+  const photos = Array.isArray(weddingPhotos) ? weddingPhotos.filter(Boolean) : [];
   const grid = document.getElementById('wedding-display-grid');
+  if (!grid) return;
+
   grid.innerHTML = '';
+
+  if (photos.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:28px 16px; color:var(--text-muted); font-size:13px; line-height:1.7;">등록된 웨딩 사진이 아직 없어요</div>';
+    document.getElementById('wedding-photo-modal').style.display = 'flex';
+    return;
+  }
+
   photos.forEach(src => {
     const img = document.createElement('img');
     img.src = src;
@@ -924,28 +934,6 @@ function openTimelineModal() {
 
 function closeTimelineModal() {
   const modal = document.getElementById('timeline-menu-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-function openFaqModal() {
-  const body = document.getElementById('faq-menu-body');
-  const title = document.getElementById('faq-menu-title');
-  if (!body || !title) return;
-
-  title.textContent = `${getCurrentCoupleLabel()} 안내 FAQ`;
-  body.innerHTML = DEFAULT_FAQ_ITEMS.map(item => `
-    <div style="padding:14px 0; border-bottom:1px solid var(--border);">
-      <div style="font-size:13px; font-weight:700; color:var(--deep-rose); margin-bottom:6px;">Q. ${item.q}</div>
-      <div style="font-size:12px; color:var(--text-muted); line-height:1.7;">${item.a}</div>
-    </div>
-  `).join('');
-
-  closeMenu();
-  document.getElementById('faq-menu-modal').style.display = 'flex';
-}
-
-function closeFaqModal() {
-  const modal = document.getElementById('faq-menu-modal');
   if (modal) modal.style.display = 'none';
 }
 

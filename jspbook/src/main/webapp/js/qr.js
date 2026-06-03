@@ -68,11 +68,13 @@ function clearInvitation() {
 
 // ── 웨딩 사진 ──────────────────────────
 let weddingPhotos = [];
+let weddingPhotoFiles = [];
 
 function addWeddingPhotos(e) {
   const files = Array.from(e.target.files);
   const remaining = 8 - weddingPhotos.length;
   files.slice(0, remaining).forEach(f => {
+    weddingPhotoFiles.push(f);
     const reader = new FileReader();
     reader.onload = ev => {
       weddingPhotos.push(ev.target.result);
@@ -87,6 +89,7 @@ function addWeddingPhotos(e) {
 
 function removeWeddingPhoto(idx) {
   weddingPhotos.splice(idx, 1);
+  weddingPhotoFiles.splice(idx, 1);
   renderWeddingPhotoGrid();
   updateChecklist();
   clearQR();
@@ -275,9 +278,9 @@ generateQRCode = async function() {
     const invitationFile = (typeof invitationType === 'undefined' || invitationType === 'image')
       ? document.getElementById('invitation-input').files[0]
       : null;
-    const photoFiles = document.getElementById('wedding-photo-input').files;
+    const photoFiles = Array.isArray(weddingPhotoFiles) ? weddingPhotoFiles : [];
     if (invitationFile || (photoFiles && photoFiles.length > 0)) {
-      await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles ? Array.from(photoFiles) : []);
+      await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles);
     }
 
     // QR 생성 (고유 이벤트 코드 기반, 청첩장 URL·FAQ 파라미터 포함)
@@ -388,8 +391,6 @@ function goToEntry() {
     if (groom && document.getElementById('groom-name')) document.getElementById('groom-name').textContent = groom;
     if (bride && document.getElementById('bride-name')) document.getElementById('bride-name').textContent = bride;
     if (groom && bride) document.querySelectorAll('.nav-couple').forEach(el => el.textContent = groom + ' ♥ ' + bride);
-    const qrScreen = document.getElementById('screen-qr');
-    if (qrScreen) qrScreen.classList.remove('active');
     const landingScreen = document.getElementById('screen-landing');
     if (landingScreen) landingScreen.classList.add('active');
     currentScreenName = 'landing';
@@ -653,7 +654,7 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    if (document.getElementById('panel-create') || document.getElementById('screen-qr')) {
+    if (document.getElementById('panel-create')) {
         updateChecklist();
         refreshCreateWorkspace();
     }

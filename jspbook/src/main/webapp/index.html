@@ -144,15 +144,7 @@
           <div class="todo-wrap" id="todo-list">
             <div class="todo-item">
               <div class="todo-cb" onclick="toggleTodo(this)"></div>
-              <span class="todo-text">오늘 결혼식 2건 QR 상태 확인</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-cb" onclick="toggleTodo(this)"></div>
-              <span class="todo-text">안성민♥백지우 행사 신규 업로드 확인</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-cb" onclick="toggleTodo(this)"></div>
-              <span class="todo-text">권영재♥류하란 D-2 — QR 테스트</span>
+              <span class="todo-text">운영 메모를 자유롭게 남겨 주세요</span>
             </div>
           </div>
           <div class="todo-input-row">
@@ -484,12 +476,12 @@
       <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:6px;">
         <div style="text-align:center;">
           <div style="font-size:11px; color:var(--text-muted); letter-spacing:2px; margin-bottom:4px;">신랑</div>
-          <div id="groom-name" style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--gold);">권영준</div>
+          <div id="groom-name" style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--gold);">신랑</div>
         </div>
         <div style="font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--blush); font-weight:300; padding-bottom:2px;">♥</div>
         <div style="text-align:center;">
           <div style="font-size:11px; color:var(--text-muted); letter-spacing:2px; margin-bottom:4px;">신부</div>
-          <div id="bride-name" style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--gold);">이수아</div>
+          <div id="bride-name" style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--gold);">신부</div>
         </div>
       </div>
     </div>
@@ -552,7 +544,7 @@
     <span></span><span></span><span></span>
   </button>
   <div class="nav-logo">
-    <span class="nav-couple">권영준 ♥ 이수아</span>
+    <span class="nav-couple">신랑 ♥ 신부</span>
     <span>A Moment</span> That Lasts
   </div>
   <div class="nav-pill">
@@ -566,10 +558,10 @@
 <div class="menu-panel" id="menu-panel">
   <div class="menu-panel-header">
     <div class="menu-panel-title"><span>A Moment</span> That Lasts</div>
-    <div class="menu-panel-couple nav-couple">권영준 ♥ 이수아</div>
+    <div class="menu-panel-couple nav-couple">신랑 ♥ 신부</div>
   </div>
   <div class="menu-panel-body">
-    <button class="menu-item" onclick="closeMenu(); showToast('준비 중이에요')">
+    <button class="menu-item" onclick="openTimelineModal()">
       <span class="menu-item-icon">📋</span> 타임테이블
     </button>
     <button class="menu-item" onclick="closeMenu(); showInvitationScreen()">
@@ -602,7 +594,7 @@
       <div class="photo-drop-text">
         사진을 여기에 드래그하거나<br>
         <strong>클릭하여 업로드</strong>하세요<br>
-        <span style="font-size:11px; color: var(--text-muted);">JPG, PNG, HEIC · 최대 10MB · 최대 5장</span>
+        <span style="font-size:11px; color: var(--text-muted);">JPG, PNG · 최대 10MB · 최대 5장</span>
       </div>
       <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="previewFiles(event)">
     </div>
@@ -922,13 +914,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="js/state.js?v=20260601a"></script>
 <script src="js/api.js?v=20260601b"></script>
-<script src="js/operator.js?v=20260601b"></script>
-<script src="js/ui.js?v=20260601b"></script>
-<script src="js/gallery.js?v=20260522d"></script>
-<script src="js/upload.js?v=20260601b"></script>
-<script src="js/admin.js?v=20260601b"></script>
+<script src="js/operator.js?v=20260603a"></script>
+<script src="js/ui.js?v=20260603a"></script>
+<script src="js/gallery.js?v=20260603a"></script>
+<script src="js/upload.js?v=20260603a"></script>
+<script src="js/admin.js?v=20260603a"></script>
 <script src="js/faq.js?v=20260524e"></script>
-<script src="js/invitation.js?v=20260524e"></script>
-<script src="js/qr.js?v=20260601b"></script>
+<script src="js/invitation.js?v=20260603a"></script>
+<script src="js/qr.js?v=20260603a"></script>
 </body>
 </html>

@@ -44,8 +44,7 @@ function renderPreviewStrip() {
     del.textContent = '✕';
     del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--deep-rose);color:white;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1;';
     del.onclick = () => {
-      pendingPhotos.splice(idx, 1);
-      renderPreviewStrip();
+      removePhoto(idx);
     };
     wrap.appendChild(img);
     wrap.appendChild(del);
@@ -53,7 +52,11 @@ function renderPreviewStrip() {
   });
 }
 
-function removePhoto(idx) {}   // 하위 호환용
+function removePhoto(idx) {
+  pendingPhotos.splice(idx, 1);
+  pendingFiles.splice(idx, 1);
+  renderPreviewStrip();
+}
 
 function updateCharCount() {
   document.getElementById('char-count').textContent =
@@ -109,7 +112,7 @@ function submitUpload() {
     document.getElementById('message-input').value   = '';
     document.getElementById('char-count').textContent = '0';
     renderPreviewStrip();
-    renderAdminGrid();
+    await renderAdminGrid(getVisibleAdminContext(), { skipReload: true });
     showToast('공유되었습니다 💌');
     setTimeout(() => showScreen('gallery'), 1200);
   });

@@ -2,7 +2,7 @@
 //  invitation.js — 청첩장 페이지 / 이미지·링크 처리
 // =====================================================
 
-// DUMMY_INVITATION is already declared in ui.js (loaded earlier)
+// invitationData / invitationUrl 상태는 ui.js, qr.js와 함께 공유됩니다.
 
 let invitationType = 'image'; // 'image' or 'url'
 let invitationUrl  = '';

@@ -22,10 +22,24 @@ function setSort(type) {
   renderTimeline();
 }
 
-async function renderTimeline() {
-  await loadPosts();
+async function renderTimeline(options = {}) {
+  if (!options.skipReload) {
+    await loadPosts();
+  }
 
   const container = document.getElementById('timeline');
+  const counter = document.getElementById('gallery-count');
+  if (!container || !counter) return;
+
+  const esc = typeof safeTxt === 'function'
+    ? safeTxt
+    : (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
   container.innerHTML = '';
 
   const filtered = currentFilter === 'all'
@@ -39,10 +53,10 @@ async function renderTimeline() {
         <div style="font-size:14px; line-height:1.7;">
           ${currentFilter === 'all'
             ? '아직 공유된 순간이 없어요<br>첫 번째 사진을 올려보세요!'
-            : currentFilter + '측 게시물이 없어요'}
+            : esc(currentFilter) + '측 게시물이 없어요'}
         </div>
       </div>`;
-    document.getElementById('gallery-count').textContent = '총 0개의 순간';
+    counter.textContent = '총 0개의 순간';
     return;
   }
 
@@ -50,41 +64,46 @@ async function renderTimeline() {
     currentSort === 'popular' ? (b.likes || 0) - (a.likes || 0) : 0
   );
 
-  document.getElementById('gallery-count').textContent = `총 ${sorted.length}개의 순간`;
+  counter.textContent = `총 ${sorted.length}개의 순간`;
 
   sorted.forEach((p, i) => {
     const canAutoDelete = !!p.canDelete;
     const ownBadge = canAutoDelete
       ? `<span style="display:inline-flex;align-items:center;margin-left:6px;padding:2px 7px;border-radius:999px;background:rgba(197,132,108,0.12);color:var(--deep-rose);font-size:10px;font-weight:600;letter-spacing:0.2px;vertical-align:middle;">내 글</span>`
       : '';
+    const displayName = esc(p.nick || p.name || '하객');
+    const displayCategory = esc(p.category || '');
+    const displayTime = esc(p.time || '');
+    const displayMsg = esc(p.msg || '(사진만 공유)');
+    const displayAvatar = esc((p.name || '하객').slice(0, 1));
     const item = document.createElement('div');
     item.className = 'timeline-item';
     item.style.animationDelay = (i * 0.05) + 's';
 
     item.innerHTML = `
       ${p.photos && p.photos.length > 0
-        ? p.photos.map(src => `<img src="${src}" style="width:100%; display:block; object-fit:contain; background:#f3ede3; max-height:480px;">`).join('')
+        ? p.photos.map(src => `<img src="${esc(src)}" style="width:100%; display:block; object-fit:contain; background:#f3ede3; max-height:480px;">`).join('')
         : ''}
       <div class="timeline-content">
         <div class="timeline-meta">
-          <div class="avatar" style="background:${p.color}">
+          <div class="avatar" style="background:${esc(p.color || '#C5826A')}">
             ${p.category === '직장동료' ? '🏢'
               : ['초등친구','중등친구','고등친구','대학동기'].includes(p.category) ? '🏫'
               : p.category === '가족' ? '🤍'
               : p.category === '군대동기' ? '🪖'
               : p.category ? '⭐'
-              : p.name[0]}
+              : displayAvatar}
           </div>
           <div class="timeline-name">
             ${p.side === '신랑' ? `<span style="font-size:11px;font-weight:500;margin-right:4px;background:#BDDFF7;color:#2E6B9E;padding:1px 6px;border-radius:4px;">[신랑측]</span>` : ''}
             ${p.side === '신부' ? `<span style="font-size:11px;font-weight:500;margin-right:4px;background:#F7C5D8;color:#9E2E55;padding:1px 6px;border-radius:4px;">[신부측]</span>` : ''}
-            ${p.category ? `<span style="font-size:11px;color:var(--rose);font-weight:400;margin-right:4px;">[${p.category}]</span>` : ''}
-            ${p.nick || p.name}
+            ${p.category ? `<span style="font-size:11px;color:var(--rose);font-weight:400;margin-right:4px;">[${displayCategory}]</span>` : ''}
+            ${displayName}
             ${ownBadge}
           </div>
-          <div class="timeline-time">${p.time}</div>
+          <div class="timeline-time">${displayTime}</div>
         </div>
-        <div class="timeline-msg">${p.msg}</div>
+        <div class="timeline-msg">${displayMsg}</div>
         <div class="timeline-actions">
           <button class="action-btn" id="like-btn-${p.id}" onclick="toggleLike(${p.id})" style="display:flex;align-items:center;gap:4px;">
             <span id="like-heart-${p.id}" style="font-size:15px;color:${p.liked ? '#C9A96E' : ''};">${p.liked ? '♥' : '♡'}</span>

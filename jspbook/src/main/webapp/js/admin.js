@@ -65,9 +65,9 @@ async function adminLogout() {
   // 일반 로그아웃 — 운영자 세션 있으면 콘솔, 없으면 로그인 화면
   const groomEl = document.getElementById('groom-name');
   const brideEl = document.getElementById('bride-name');
-  if (groomEl) groomEl.textContent = '권영준';
-  if (brideEl) brideEl.textContent = '이수아';
-  document.querySelectorAll('.nav-couple').forEach(el => el.textContent = '권영준 ♥ 이수아');
+  if (groomEl) groomEl.textContent = '신랑';
+  if (brideEl) brideEl.textContent = '신부';
+  document.querySelectorAll('.nav-couple').forEach(el => el.textContent = '신랑 ♥ 신부');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('main-nav').style.display = 'none';
   document.getElementById('slide-wrapper').style.display = 'none';
@@ -141,12 +141,18 @@ function getAdminDom(context) {
   };
 }
 
+function getVisibleAdminContext() {
+  return document.getElementById('screen-admin')?.classList.contains('active')
+    ? 'screen-admin'
+    : 'panel-admin';
+}
+
 // ── 그리드 렌더링 ─────────────────────────────────
 
 function setAdminFilter(filter, context) {
   adminFilter = filter;
   ['panel-admin', 'screen-admin'].forEach((ctx) => {
-    const dom = getAdminDom(context || ctx);
+    const dom = getAdminDom(ctx);
     Object.entries(dom.filterMap).forEach(([key, id]) => {
       const btn = document.getElementById(id);
       if (!btn) return;
@@ -156,7 +162,7 @@ function setAdminFilter(filter, context) {
       btn.style.boxShadow = isActive ? '0 1px 3px var(--shadow)' : 'none';
     });
   });
-  renderAdminGrid(context);
+  renderAdminGrid(context || getVisibleAdminContext());
 }
 
 function getAdminSelectedEvent() {
@@ -243,6 +249,15 @@ function renderAdminMessageList(filteredPosts, context = 'panel-admin') {
   const count = dom.messageCountLabel;
   if (!list || !count) return;
 
+  const esc = typeof safeTxt === 'function'
+    ? safeTxt
+    : (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
   const selected = getAdminSelectedEvent();
   if (!selected) {
     count.textContent = '0건';
@@ -262,23 +277,26 @@ function renderAdminMessageList(filteredPosts, context = 'panel-admin') {
     const normalizedSide = normalizeAdminSideLabel(post.side);
     const sideColor = normalizedSide === '신랑' ? '#4E6A8F' : normalizedSide === '신부' ? '#A85C77' : 'var(--deep-rose)';
     const photos = post.photos || [];
+    const displayName = esc(post.displayName || post.name || '-');
+    const displayMeta = `${normalizedSide || '-'}측 · ${post.category || '-'} · ${post.time || ''}`;
+    const displayMsg = esc(post.msg && post.msg.trim() ? post.msg : '(사진만 공유)');
     card.style.cssText = 'border:1px solid var(--border); border-radius:14px; padding:14px; background:#FFFCFA;';
     card.innerHTML = `
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px;">
         <div>
-          <div style="font-size:13px; font-weight:700; color:var(--text);">${post.displayName || post.name || '-'}</div>
-          <div style="font-size:11px; color:${sideColor}; margin-top:3px;">${normalizedSide || '-'}측 · ${post.category || '-'} · ${post.time || ''}</div>
+          <div style="font-size:13px; font-weight:700; color:var(--text);">${displayName}</div>
+          <div style="font-size:11px; color:${sideColor}; margin-top:3px;">${esc(displayMeta)}</div>
         </div>
         <div style="font-size:11px; color:var(--text-muted); white-space:nowrap;">사진 ${photos.length}장 · 좋아요 ${post.likes || 0}</div>
       </div>
-      <div style="font-size:13px; color:var(--text-soft); line-height:1.7; margin-bottom:${photos.length ? '10px' : '0'};">${post.msg && post.msg.trim() ? post.msg : '(사진만 공유)'}</div>
-      ${photos.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">${photos.map((src, index) => `<img src="${src}" onclick="openPhotoViewer('${src}')" style="width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer;">`).join('')}</div>` : ''}
+      <div style="font-size:13px; color:var(--text-soft); line-height:1.7; margin-bottom:${photos.length ? '10px' : '0'};">${displayMsg}</div>
+      ${photos.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">${photos.map((src) => `<img src="${esc(src)}" onclick='openPhotoViewer(${JSON.stringify(src)})' style="width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer;">`).join('')}</div>` : ''}
     `;
     list.appendChild(card);
   });
 }
 
-async function renderAdminGrid(context = 'panel-admin') {
+async function renderAdminGrid(context = 'panel-admin', options = {}) {
   const dom = getAdminDom(context);
 
   if (dom.context === 'panel-admin' && !adminEvents.length) {
@@ -289,8 +307,9 @@ async function renderAdminGrid(context = 'panel-admin') {
     renderAdminEventOptions(context);
   }
   currentEventCode = adminEventCode;
-
-  await loadPosts();
+  if (!options.skipReload) {
+    await loadPosts();
+  }
 
   const grid = dom.grid;
   if (!grid) return;
@@ -340,8 +359,10 @@ async function renderAdminGrid(context = 'panel-admin') {
 
   allPhotos.forEach((item, i) => {
     const normalizedSide = normalizeAdminSideLabel(item.side);
-    const borderColor = normalizedSide === '신랑' ? '#BDDFF7' : normalizedSide === '신부' ? '#F7C5D8' : 'var(--border)';
+    const borderColor = normalizedSide === '신랑' ? '#BDDFF7' : normalizedSide === '신부' ? '#F7C5D8' : 'rgba(201,169,110,0.35)';
     const sideText = normalizedSide ? `[${normalizedSide}측] ` : '';
+    const safeSrc = typeof safeTxt === 'function' ? safeTxt(item.src) : String(item.src ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const safeBadge = typeof safeTxt === 'function' ? safeTxt(`${sideText}${item.name} · ${item.time}`) : String(`${sideText}${item.name} · ${item.time}`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const deleteButton = item.canAdminDelete
       ? `<button class="admin-icon-btn" id="delete-btn-${i}" onclick="confirmDelete(${item.postId}, true)" title="관리자 강제삭제">🗑</button>`
       : '';
@@ -349,11 +370,11 @@ async function renderAdminGrid(context = 'panel-admin') {
     const wrap = document.createElement('div');
     wrap.className = 'admin-thumb-wrap';
     wrap.innerHTML = `
-      <img src="${item.src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:3px solid ${borderColor};cursor:pointer;display:block;">
-      <div class="admin-thumb-badge" style="font-size:10px;background:rgba(44,31,26,0.55);color:white;position:absolute;bottom:4px;left:4px;right:4px;border-radius:4px;padding:2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sideText}${item.name} · ${item.time}</div>
+      <img src="${safeSrc}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:3px solid ${borderColor};cursor:pointer;display:block;">
+      <div class="admin-thumb-badge" style="font-size:10px;background:rgba(44,31,26,0.55);color:white;position:absolute;bottom:4px;left:4px;right:4px;border-radius:4px;padding:2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeBadge}</div>
       <div class="admin-thumb-actions">
-        <button class="admin-icon-btn" onclick="openPhotoViewer('${item.src}')">🔍</button>
-        <button class="admin-icon-btn" id="dl-btn-${i}" onclick="adminDownloadPhoto('${item.src}', ${i})">⬇</button>
+        <button class="admin-icon-btn" onclick='openPhotoViewer(${JSON.stringify(item.src)})'>🔍</button>
+        <button class="admin-icon-btn" id="dl-btn-${i}" onclick='adminDownloadPhoto(${JSON.stringify(item.src)}, ${i})'>⬇</button>
         ${deleteButton}
       </div>`;
     grid.appendChild(wrap);
@@ -462,7 +483,7 @@ async function deletePost(adminForce = false) {
 
   deleteTargetPostId = null;
   await loadPosts();
-  renderTimeline();
-  renderAdminGrid();
+  await renderTimeline({ skipReload: true });
+  await renderAdminGrid(getVisibleAdminContext(), { skipReload: true });
   showToast(adminForce ? '관리자 권한으로 게시물을 삭제했어요' : '게시물이 삭제되었어요');
 }

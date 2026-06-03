@@ -22,8 +22,7 @@ async function switchPanel(panelId) {
   } else if (panelId === 'panel-manage') {
     if (typeof renderManageScreen === 'function') await renderManageScreen();
   } else if (panelId === 'panel-admin') {
-    if (typeof loadAdminEvents === 'function') await loadAdminEvents(true);
-    if (typeof renderAdminGrid === 'function') await renderAdminGrid('panel-admin');
+    if (typeof loadAdminEvents === 'function') await loadAdminEvents(true, 'panel-admin');
   } else if (panelId === 'panel-create') {
     if (typeof updateChecklist === 'function') updateChecklist();
     if (typeof refreshCreateWorkspace === 'function') refreshCreateWorkspace();
@@ -122,13 +121,4 @@ function addTodo() {
   const addRow = list.nextElementSibling;
   list.insertBefore(item, addRow);
   input.value = '';
-}
-
-// ── Toast ──
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
 }
