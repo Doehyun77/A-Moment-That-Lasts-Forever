@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>운영자 콘솔 UI 리뷰 · A Moment That Lasts Forever</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f1ec;
+      --paper: rgba(255,255,255,0.78);
+      --card: #fffdfa;
+      --line: rgba(91, 58, 46, 0.12);
+      --line-strong: rgba(91, 58, 46, 0.2);
+      --text: #34231d;
+      --muted: #7e655c;
+      --rose: #8b4a38;
+      --rose-soft: #caa395;
+      --gold: #b99358;
+      --green: #2f7d55;
+      --red: #b45d5d;
+      --shadow: 0 20px 60px rgba(64, 38, 30, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(202,163,149,0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(185,147,88,0.12), transparent 24%),
+        linear-gradient(180deg, #fbf8f5 0%, #f3ece6 100%);
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    .hero {
+      padding: 34px 36px;
+      border: 1px solid rgba(255,255,255,0.7);
+      background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,248,244,0.78));
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--rose);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.72);
+    }
+    h1, h2, h3 { margin: 0; }
+    h1 {
+      margin-top: 18px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(40px, 5vw, 62px);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      font-weight: 500;
+      color: var(--rose);
+    }
+    .hero p {
+      max-width: 900px;
+      margin: 18px 0 0;
+      font-size: 15px;
+      color: var(--muted);
+    }
+    .hero-grid {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .mini-card {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .mini-card strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: var(--rose);
+    }
+    .mini-card span {
+      display: block;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .section {
+      margin-top: 28px;
+      padding: 28px;
+      border-radius: var(--radius-xl);
+      background: var(--paper);
+      border: 1px solid rgba(255,255,255,0.8);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+    .section-head p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 760px;
+    }
+    .badge {
+      white-space: nowrap;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.66);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--rose);
+      font-weight: 700;
+    }
+    .audit-grid, .direction-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .audit-card, .direction-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+    }
+    .audit-top, .direction-top {
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid rgba(91,58,46,0.08);
+      background: linear-gradient(180deg, rgba(255,251,248,0.95), rgba(255,255,255,0.8));
+    }
+    .audit-top .label, .direction-top .label {
+      color: var(--rose);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .audit-body, .direction-body {
+      padding: 18px 20px 20px;
+    }
+    ul.clean {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    ul.clean li + li { margin-top: 8px; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f8f1ec;
+      border: 1px solid rgba(139,74,56,0.12);
+      font-size: 12px;
+      color: var(--rose);
+      font-weight: 700;
+    }
+    .direction-card.featured {
+      border-color: rgba(139,74,56,0.26);
+      box-shadow: 0 18px 44px rgba(139,74,56,0.1);
+    }
+    .direction-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .priority {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      color: white;
+      background: var(--rose);
+      border-radius: 999px;
+      padding: 7px 10px;
+    }
+    .mockup-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+    .mock {
+      background: #fcfaf8;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+    }
+    .mock h3 {
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+    .mock-shell {
+      background: white;
+      border-radius: 22px;
+      border: 1px solid rgba(91,58,46,0.08);
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(64,38,30,0.05);
+    }
+    .mock-topbar {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(91,58,46,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(180deg, #fffdfa, #f8f1ec);
+    }
+    .mock-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 12px;
+      padding: 16px 18px;
+    }
+    .kpi {
+      border-radius: 16px;
+      padding: 14px;
+      background: #fffaf6;
+      border: 1px solid rgba(139,74,56,0.1);
+    }
+    .kpi strong {
+      display: block;
+      font-size: 24px;
+      color: var(--rose);
+      margin-top: 4px;
+    }
+    .mock-alerts {
+      padding: 0 18px 18px;
+      display: grid;
+      gap: 10px;
+    }
+    .alert {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(91,58,46,0.08);
+      background: #fff;
+    }
+    .alert.warn { border-color: rgba(185,147,88,0.36); background: #fffaf0; }
+    .alert.good { border-color: rgba(47,125,85,0.22); background: #f5fbf7; }
+    .alert.bad { border-color: rgba(180,93,93,0.22); background: #fff6f6; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.5fr .8fr auto;
+      gap: 10px;
+      padding: 16px 18px 8px;
+    }
+    .toolbar > div, .toolbar button {
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(91,58,46,0.1);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .toolbar button {
+      justify-content: center;
+      color: white;
+      background: var(--rose);
+      font-weight: 700;
+    }
+    .list {
+      padding: 10px 18px 18px;
+      display: grid;
+      gap: 10px;
+    }
+    .row {
+      border: 1px solid rgba(91,58,46,0.08);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1.2fr .7fr .7fr auto;
+      gap: 10px;
+      align-items: center;
+      background: #fff;
+    }
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: end;
+    }
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(91,58,46,0.1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fffaf6;
+      color: var(--rose);
+      font-size: 14px;
+    }
+    .notes {
+      display: grid;
+      gap: 12px;
+    }
+    .note {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid rgba(91,58,46,0.08);
+    }
+    .note strong { color: var(--rose); }
+    .footer {
+      margin-top: 28px;
+      padding: 22px 24px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.74);
+      border: 1px solid rgba(255,255,255,0.8);
+      color: var(--muted);
+      font-size: 14px;
+      box-shadow: var(--shadow);
+    }
+    @media (max-width: 1080px) {
+      .hero-grid, .audit-grid, .direction-grid, .mockup-grid { grid-template-columns: 1fr; }
+      .mock-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .toolbar, .row { grid-template-columns: 1fr; }
+      .section-head { flex-direction: column; align-items: start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="eyebrow">operator console only</span>
+      <h1>운영자 콘솔 UI 리뷰<br>1 · 2 · 3안</h1>
+      <p>
+        하객 공개 화면이 아니라 <strong>운영자 전용 콘솔</strong> 기준으로 다시 정리한 리뷰입니다.
+        지금 화면의 핵심은 “감성”보다 <strong>빠른 운영 판단</strong>, <strong>반복 작업 효율</strong>, <strong>실수 방지</strong>입니다.
+        다만 프로젝트 톤은 유지해야 하므로, 전체를 차갑게 바꾸기보다 현재의 웨딩 무드를 살린 채 콘솔답게 다듬는 방향으로 잡았습니다.
+      </p>
+      <div class="hero-grid">
+        <div class="mini-card">
+          <strong>현재 확인한 범위</strong>
+          <span>대시보드 · 사이트 관리 · 업로드 관리</span>
+        </div>
+        <div class="mini-card">
+          <strong>공통 문제</strong>
+          <span>업무 우선순위보다 감성 비중이 조금 더 앞섬</span>
+        </div>
+        <div class="mini-card">
+          <strong>기본 방향</strong>
+          <span>보수적 개선 + 기존 톤 유지 + 운영 효율 강화</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>현재 콘솔 구조 진단</h2>
+          <p>실제 코드와 브라우저 화면을 기준으로, 각 운영 화면이 어떤 장점과 병목을 갖는지 먼저 분리했습니다.</p>
+        </div>
+        <span class="badge">실제 확인 기준</span>
+      </div>
+      <div class="audit-grid">
+        <article class="audit-card">
+          <div class="audit-top">
+            <span class="label">dashboard</span>
+            <h3>운영자 홈</h3>
+          </div>
+          <div class="audit-body">
+            <ul class="clean">
+              <li>좌측 사이드바 + KPI 카드 + 월별 차트 + 최근 생성 사이트 표 구조는 명확합니다.</li>
+              <li>하지만 첫 화면에서 “무엇을 먼저 처리해야 하는지”는 약합니다.</li>
+              <li>시스템 티커는 예쁘지만 정보가 길고, 경고/주의보다 정상 상태 나열에 치우쳐 있습니다.</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">장점: 구조 명확</span>
+              <span class="chip">문제: 우선순위 약함</span>
+              <span class="chip">문제: 알림 존재감 약함</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="audit-card">
+          <div class="audit-top">
+            <span class="label">site manage</span>
+            <h3>사이트 관리</h3>
+          </div>
+          <div class="audit-body">
+            <ul class="clean">
+              <li>검색 · 정렬 · 오늘/예정/지난 구분은 운영 흐름에 잘 맞습니다.</li>
+              <li>카드 우측의 액션 버튼이 아이콘 위주라 처음 보면 역할이 즉시 안 들어옵니다.</li>
+              <li>지난 결혼식 목록은 길어질수록 피로가 커질 구조입니다.</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">장점: 실무형 필터</span>
+              <span class="chip">문제: 액션 의미 약함</span>
+              <span class="chip">문제: 긴 목록 피로</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="audit-card">
+          <div class="audit-top">
+            <span class="label">upload manage</span>
+            <h3>업로드 관리</h3>
+          </div>
+          <div class="audit-body">
+            <ul class="clean">
+              <li>행사 선택 후 사진/하객/메시지를 관리하는 구조는 맞습니다.</li>
+              <li>다만 행사 미선택 상태와 실제 데이터 0 상태가 비슷하게 보여 혼동 여지가 있습니다.</li>
+              <li>실무에서는 미처리/오류/최신 업로드 같은 운영 신호가 더 앞에 오면 좋습니다.</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">장점: 개념 분리</span>
+              <span class="chip">문제: 빈 상태 안내 약함</span>
+              <span class="chip">문제: 운영 지표 부족</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>1 · 2 · 3 방안</h2>
+          <p>전면 재디자인이 아니라, 지금 콘솔을 더 운영자답게 만드는 세 가지 축입니다. 1안을 먼저 하고, 2안과 3안을 순차로 얹는 방식이 가장 안전합니다.</p>
+        </div>
+        <span class="badge">권장 순서: 1 → 2 → 3</span>
+      </div>
+      <div class="direction-grid">
+        <article class="direction-card featured">
+          <div class="direction-top">
+            <div class="direction-title">
+              <div>
+                <span class="label">option 1</span>
+                <h3>정보 위계 재정렬</h3>
+              </div>
+              <span class="priority">우선</span>
+            </div>
+          </div>
+          <div class="direction-body">
+            <ul class="clean">
+              <li>대시보드 첫 화면에서 “지금 확인할 것”을 가장 위로 올립니다.</li>
+              <li>정상 상태 나열보다 경고, 오늘 행사, 최근 업로드, 미완료 작업을 먼저 보이게 합니다.</li>
+              <li>KPI는 유지하되 설명 텍스트를 줄이고 숫자와 상태 의미를 더 또렷하게 만듭니다.</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">Dashboard 중심</span>
+              <span class="chip">상태 티커 압축</span>
+              <span class="chip">우선처리 카드 신설</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction-card">
+          <div class="direction-top">
+            <div class="direction-title">
+              <div>
+                <span class="label">option 2</span>
+                <h3>작업 흐름 명확화</h3>
+              </div>
+            </div>
+          </div>
+          <div class="direction-body">
+            <ul class="clean">
+              <li>사이트 관리 카드 액션을 아이콘만 두지 말고 1차 버튼/2차 버튼으로 구분합니다.</li>
+              <li>행사 선택, 링크 복사, QR 확인, 하객 화면 열기 같은 반복 작업을 한 번에 이해되게 정리합니다.</li>
+              <li>업로드 관리에서는 행사 미선택 상태를 더 분명히 보여주고, 선택 후 가능한 작업을 바로 제안합니다.</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">버튼 의미 강화</span>
+              <span class="chip">반복 작업 단축</span>
+              <span class="chip">빈 상태 가이드</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction-card">
+          <div class="direction-top">
+            <div class="direction-title">
+              <div>
+                <span class="label">option 3</span>
+                <h3>톤 유지형 고급화</h3>
+              </div>
+            </div>
+          </div>
+          <div class="direction-body">
+            <ul class="clean">
+              <li>현재의 웨딩 무드와 브라운/크림 톤은 유지합니다.</li>
+              <li>대신 대비, 라벨, 경계선, 섹션 헤더를 다듬어 콘솔 특유의 정돈감을 올립니다.</li>
+              <li>즉 “청첩장 서비스 느낌”은 남기되, 더 이상 랜딩처럼 보이지 않게 합니다.</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">기존 느낌 유지</span>
+              <span class="chip">가독성 상승</span>
+              <span class="chip">과한 리디자인 방지</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>화면에 바로 매핑한 예시</h2>
+          <p>실제 코드 구조를 크게 깨지 않으면서, 지금 콘솔을 어떤 식으로 바꾸면 되는지 모형 형태로 정리했습니다.</p>
+        </div>
+        <span class="badge">보수적 개편 예시</span>
+      </div>
+      <div class="mockup-grid">
+        <div class="mock">
+          <h3>대시보드 쪽 적용 예시</h3>
+          <div class="mock-shell">
+            <div class="mock-topbar">
+              <div>
+                <strong style="display:block; color:var(--rose); font-size:14px;">운영자 홈</strong>
+                <span style="font-size:12px; color:var(--muted);">오늘 바로 확인할 항목 중심</span>
+              </div>
+              <div class="chip">오늘 행사 2건</div>
+            </div>
+            <div class="mock-kpis">
+              <div class="kpi">전체 생성 사이트<strong>22</strong></div>
+              <div class="kpi">예정 행사<strong>5</strong></div>
+              <div class="kpi">업로드 사진<strong>11</strong></div>
+              <div class="kpi">참여 하객<strong>13</strong></div>
+            </div>
+            <div class="mock-alerts">
+              <div class="alert warn"><span>오늘 확인 필요</span><strong>당일 행사 2건</strong></div>
+              <div class="alert good"><span>정상 상태</span><strong>API / DB / 업로드 연결 완료</strong></div>
+              <div class="alert bad"><span>운영 주의</span><strong>빈 업로드 행사 3건</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock">
+          <h3>사이트 관리 쪽 적용 예시</h3>
+          <div class="mock-shell">
+            <div class="toolbar">
+              <div>커플명, 행사코드, 날짜로 찾기</div>
+              <div>예식일 최신순</div>
+              <button>필터 초기화</button>
+            </div>
+            <div class="list">
+              <div class="row">
+                <div>
+                  <strong>황민준 ♥ 서유진</strong><br>
+                  <span style="font-size:12px;color:var(--muted);">2026-06-29 · e938cd2c</span>
+                </div>
+                <div><span class="chip">D-29</span></div>
+                <div><span style="font-size:13px;color:var(--muted);">하객 1 · 사진 0</span></div>
+                <div class="row-actions">
+                  <span class="icon-btn">QR</span>
+                  <span class="icon-btn">링크</span>
+                  <span class="icon-btn">열기</span>
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <strong>asdas ♥ asdas</strong><br>
+                  <span style="font-size:12px;color:var(--muted);">2026-05-31 · 6d503be4</span>
+                </div>
+                <div><span class="chip" style="background:#f5fbf7;border-color:rgba(47,125,85,0.18);color:var(--green)">D-DAY</span></div>
+                <div><span style="font-size:13px;color:var(--muted);">하객 0 · 사진 0</span></div>
+                <div class="row-actions">
+                  <span class="icon-btn">QR</span>
+                  <span class="icon-btn">링크</span>
+                  <span class="icon-btn">열기</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>실행 우선순위</h2>
+          <p>실제로 손댈 때는 한 번에 다 바꾸지 말고 아래 순서로 가는 게 안전합니다.</p>
+        </div>
+        <span class="badge">작업 순서</span>
+      </div>
+      <div class="notes">
+        <div class="note"><strong>1단계</strong> — 대시보드 상단의 정보 위계를 조정해서 “오늘 할 일 / 경고 / 최근 변경”이 먼저 보이게 바꾸기</div>
+        <div class="note"><strong>2단계</strong> — 사이트 관리 카드 액션을 명확한 텍스트/툴팁 구조로 정리하고, 지난 결혼식 섹션 피로도 줄이기</div>
+        <div class="note"><strong>3단계</strong> — 업로드 관리에서 행사 미선택 상태, 빈 상태, 0건 상태를 명확히 분리하고 운영 지표 추가하기</div>
+      </div>
+    </section>
+
+    <div class="footer">
+      이 파일은 <strong>운영자 콘솔 전용 리뷰</strong>입니다. 하객 화면 기준 해석은 일부러 제외했습니다.
+      다음 단계에서는 이 문서를 기준으로 실제 <code>index.html</code> / <code>style.css</code> 쪽 수정안으로 옮기면 됩니다.
+    </div>
+  </div>
+</body>
+</html>

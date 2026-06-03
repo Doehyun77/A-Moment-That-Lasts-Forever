@@ -116,19 +116,53 @@ async function adminGoHome() {
   showToast('운영자 홈으로 이동했어요');
 }
 
+function getAdminDom(context) {
+  const isOperator = context === 'panel-admin' || document.getElementById('panel-admin')?.classList.contains('active');
+  if (isOperator) {
+    return {
+      context: 'panel-admin',
+      select: document.getElementById('operator-admin-event-select'),
+      summary: document.getElementById('operator-admin-event-summary'),
+      grid: document.getElementById('operator-admin-grid'),
+      messageList: document.getElementById('operator-admin-message-list'),
+      messageCountLabel: document.getElementById('operator-admin-message-count-label'),
+      photoCount: document.getElementById('operator-admin-photo-count'),
+      guestCount: document.getElementById('operator-admin-guest-count'),
+      messageCount: document.getElementById('operator-admin-message-count'),
+      filterMap: { all: 'operator-admin-filter-all', '신랑': 'operator-admin-filter-groom', '신부': 'operator-admin-filter-bride' }
+    };
+  }
+
+  return {
+    context: 'screen-admin',
+    grid: document.querySelector('#screen-admin #admin-grid'),
+    filterMap: { all: 'admin-filter-all', '신랑': 'admin-filter-groom', '신부': 'admin-filter-bride' },
+    statValues: document.querySelectorAll('#screen-admin .stat-card .stat-value')
+  };
+}
+
+function getVisibleAdminContext() {
+  return document.getElementById('screen-admin')?.classList.contains('active')
+    ? 'screen-admin'
+    : 'panel-admin';
+}
+
 // ── 그리드 렌더링 ─────────────────────────────────
 
-function setAdminFilter(filter) {
+function setAdminFilter(filter, context) {
   adminFilter = filter;
-  const map = { all: 'admin-filter-all', '신랑': 'admin-filter-groom', '신부': 'admin-filter-bride' };
-  Object.entries(map).forEach(([key, id]) => {
-    const btn = document.getElementById(id);
-    const isActive = key === filter;
-    btn.style.background = isActive ? 'var(--white)' : 'transparent';
-    btn.style.color = isActive ? 'var(--deep-rose)' : 'var(--text-muted)';
-    btn.style.boxShadow = isActive ? '0 1px 3px var(--shadow)' : 'none';
+  ['panel-admin', 'screen-admin'].forEach((ctx) => {
+    const dom = getAdminDom(ctx);
+    Object.entries(dom.filterMap).forEach(([key, id]) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const isActive = key === filter;
+      btn.style.background = isActive ? 'var(--white)' : 'transparent';
+      btn.style.color = isActive ? 'var(--deep-rose)' : 'var(--text-muted)';
+      btn.style.boxShadow = isActive ? '0 1px 3px var(--shadow)' : 'none';
+    });
   });
-  renderAdminGrid();
+  renderAdminGrid(context || getVisibleAdminContext());
 }
 
 function getAdminSelectedEvent() {
@@ -145,33 +179,89 @@ function normalizeAdminSideLabel(side) {
   return String(side).replace(/측$/,'');
 }
 
-function renderAdminEventSummary() {
-  const summary = document.getElementById('admin-event-summary');
+function renderAdminEventSummary(context) {
+  const summary = getAdminDom(context).summary;
   const selected = getAdminSelectedEvent();
   if (!summary) return;
   if (!selected) {
-    summary.textContent = '';
+    summary.textContent = '⬆ 드롭다운에서 확인할 결혼식을 선택해 주세요';
+    summary.style.padding = '';
+    summary.style.color = 'var(--text-muted)';
     return;
   }
+  summary.style.padding = '';
   summary.textContent = `${selected.groomName} ♥ ${selected.brideName} · ${selected.weddingDate || '-'} · 하객 ${selected.guestCount || 0}명 · 사진 ${selected.photoCount || 0}장`;
+  summary.style.color = 'var(--text-muted)';
 }
 
-function renderAdminEventOptions() {
-  const select = document.getElementById('admin-event-select');
+function renderAdminEventOptions(context = 'panel-admin') {
+  const select = getAdminDom(context).select;
   if (!select) return;
   const previous = adminEventCode;
   select.innerHTML = '<option value="">행사를 선택해 주세요</option>';
+
+  // 상태(today/future/past)별로 그룹핑
+  const groups = { today: [], future: [], past: [] };
   adminEvents.forEach(event => {
-    const option = document.createElement('option');
-    option.value = event.eventCode;
-    option.textContent = `${event.groomName} ♥ ${event.brideName} · ${event.weddingDate || '-'}`;
-    select.appendChild(option);
+    const status = (typeof getSiteStatusByDate === 'function')
+      ? getSiteStatusByDate(event.weddingDate || '')
+      : 'past';
+    if (groups[status]) groups[status].push(event);
   });
+
+  const labels = { today: '📌 오늘의 결혼식', future: '📅 예정된 결혼식', past: '📁 지난 결혼식' };
+  let optionIndex = 0;
+
+  if (adminEventFilter === 'all') {
+    // 전체: optgroup으로 3개 그룹 표시
+    ['today', 'future', 'past'].forEach(status => {
+      const events = groups[status];
+      if (!events.length) return;
+
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = labels[status] + ' (' + events.length + '건)';
+      select.appendChild(optgroup);
+
+      events.forEach(event => {
+        const option = document.createElement('option');
+        option.value = event.eventCode;
+        const date = event.weddingDate || '-';
+        let suffix = '';
+        if (status === 'past' && date && date !== '-') {
+          const diff = Math.floor((new Date() - new Date(date + 'T00:00:00')) / (1000 * 60 * 60 * 24));
+          if (diff > 0) suffix = ' (D+' + diff + ')';
+        }
+        option.textContent = `${event.groomName} ♥ ${event.brideName} · ${date}${suffix}`;
+        optgroup.appendChild(option);
+        optionIndex++;
+      });
+    });
+  } else {
+    // 특정 필터: 해당 그룹만 평탄하게 표시
+    const eventList = groups[adminEventFilter] || [];
+    if (!eventList.length) {
+      select.innerHTML = '<option value="">해당하는 행사가 없어요</option>';
+    } else {
+      eventList.forEach(event => {
+        const option = document.createElement('option');
+        option.value = event.eventCode;
+        const date = event.weddingDate || '-';
+        let suffix = '';
+        if (adminEventFilter === 'past' && date && date !== '-') {
+          const diff = Math.floor((new Date() - new Date(date + 'T00:00:00')) / (1000 * 60 * 60 * 24));
+          if (diff > 0) suffix = ' (D+' + diff + ')';
+        }
+        option.textContent = `${event.groomName} ♥ ${event.brideName} · ${date}${suffix}`;
+        select.appendChild(option);
+        optionIndex++;
+      });
+    }
+  }
 
   if (!adminEvents.length) {
     adminEventCode = '';
     select.value = '';
-    renderAdminEventSummary();
+    renderAdminEventSummary(context);
     return;
   }
 
@@ -181,12 +271,34 @@ function renderAdminEventOptions() {
     select.value = adminEventCode;
   } else {
     adminEventCode = '';
-    select.value = '';
   }
-  renderAdminEventSummary();
+
+  select.value = adminEventCode;
+  renderAdminEventSummary(context);
 }
 
-async function loadAdminEvents() {
+function setAdminEventFilter(filter, context = 'panel-admin') {
+  adminEventFilter = filter;
+  // 탭 버튼 active 전환
+  document.querySelectorAll('.admin-ev-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  // 현재 선택된 행사가 필터에 없으면 초기화
+  if (adminEventCode) {
+    const status = (typeof getSiteStatusByDate === 'function')
+      ? getSiteStatusByDate(adminEvents.find(e => e.eventCode === adminEventCode)?.weddingDate || '')
+      : 'past';
+    if (filter !== 'all' && status !== filter) {
+      adminEventCode = '';
+      currentEventCode = '';
+    }
+  }
+  renderAdminEventOptions(context);
+  const dom = getAdminDom(context);
+  if (dom.grid) renderAdminGrid(context);
+}
+
+async function loadAdminEvents(renderAfterLoad = false, context = 'panel-admin') {
   try {
     const events = await api_listEvents();
     adminEvents = [...events].sort((a, b) => (b.weddingDate || '').localeCompare(a.weddingDate || ''));
@@ -194,27 +306,40 @@ async function loadAdminEvents() {
     console.error('행사 목록 로드 실패:', e);
     adminEvents = [];
   }
-  renderAdminEventOptions();
+  renderAdminEventOptions(context);
+  if (renderAfterLoad) {
+    await renderAdminGrid(context);
+  }
 }
 
-async function setAdminEventCode(eventCode) {
+async function setAdminEventCode(eventCode, context = 'panel-admin') {
   adminEventCode = eventCode || '';
   currentEventCode = adminEventCode;
-  const select = document.getElementById('admin-event-select');
+  const select = getAdminDom(context).select;
   if (select && select.value !== adminEventCode) select.value = adminEventCode;
-  renderAdminEventSummary();
+  renderAdminEventSummary(context);
   // 선택한 행사의 신랑/신부 이름을 nav에 반영
   const selected = getAdminSelectedEvent();
   document.querySelectorAll('.nav-couple').forEach(el => {
     el.textContent = selected ? `${selected.groomName} ♥ ${selected.brideName}` : '신랑 ♥ 신부';
   });
-  await renderAdminGrid();
+  await renderAdminGrid(context);
 }
 
-function renderAdminMessageList(filteredPosts) {
-  const list = document.getElementById('admin-message-list');
-  const count = document.getElementById('admin-message-count');
+function renderAdminMessageList(filteredPosts, context = 'panel-admin') {
+  const dom = getAdminDom(context);
+  const list = dom.messageList;
+  const count = dom.messageCountLabel;
   if (!list || !count) return;
+
+  const esc = typeof safeTxt === 'function'
+    ? safeTxt
+    : (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 
   const selected = getAdminSelectedEvent();
   if (!selected) {
@@ -235,31 +360,39 @@ function renderAdminMessageList(filteredPosts) {
     const normalizedSide = normalizeAdminSideLabel(post.side);
     const sideColor = normalizedSide === '신랑' ? '#4E6A8F' : normalizedSide === '신부' ? '#A85C77' : 'var(--deep-rose)';
     const photos = post.photos || [];
+    const displayName = esc(post.displayName || post.name || '-');
+    const displayMeta = `${normalizedSide || '-'}측 · ${post.category || '-'} · ${post.time || ''}`;
+    const displayMsg = esc(post.msg && post.msg.trim() ? post.msg : '(사진만 공유)');
     card.style.cssText = 'border:1px solid var(--border); border-radius:14px; padding:14px; background:#FFFCFA;';
     card.innerHTML = `
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px;">
         <div>
-          <div style="font-size:13px; font-weight:700; color:var(--text);">${post.displayName || post.name || '-'}</div>
-          <div style="font-size:11px; color:${sideColor}; margin-top:3px;">${normalizedSide || '-'}측 · ${post.category || '-'} · ${post.time || ''}</div>
+          <div style="font-size:13px; font-weight:700; color:var(--text);">${displayName}</div>
+          <div style="font-size:11px; color:${sideColor}; margin-top:3px;">${esc(displayMeta)}</div>
         </div>
         <div style="font-size:11px; color:var(--text-muted); white-space:nowrap;">사진 ${photos.length}장 · 좋아요 ${post.likes || 0}</div>
       </div>
-      <div style="font-size:13px; color:var(--text-soft); line-height:1.7; margin-bottom:${photos.length ? '10px' : '0'};">${post.msg && post.msg.trim() ? post.msg : '(사진만 공유)'}</div>
-      ${photos.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">${photos.map((src, index) => `<img src="${src}" onclick="openPhotoViewer('${src}')" style="width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer;">`).join('')}</div>` : ''}
+      <div style="font-size:13px; color:var(--text-soft); line-height:1.7; margin-bottom:${photos.length ? '10px' : '0'};">${displayMsg}</div>
+      ${photos.length ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">${photos.map((src) => `<img src="${esc(src)}" onclick='openPhotoViewer(${JSON.stringify(src)})' style="width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer;">`).join('')}</div>` : ''}
     `;
     list.appendChild(card);
   });
 }
 
-async function renderAdminGrid() {
-  if (!adminEvents.length) {
-    await loadAdminEvents();
+async function renderAdminGrid(context = 'panel-admin', options = {}) {
+  const dom = getAdminDom(context);
+
+  if (dom.context === 'panel-admin' && !adminEvents.length) {
+    await loadAdminEvents(false, context);
   }
 
-  if (!adminEventCode && adminEvents.length) {
-    renderAdminEventOptions();
+  if (dom.context === 'panel-admin' && !adminEventCode && adminEvents.length) {
+    renderAdminEventOptions(context);
   }
   currentEventCode = adminEventCode;
+  if (!options.skipReload) {
+    await loadPosts();
+  }
 
   // nav-couple을 선택한 행사의 신랑/신부 이름으로 업데이트
   if (adminEventCode) {
@@ -269,9 +402,7 @@ async function renderAdminGrid() {
     });
   }
 
-  await loadPosts();
-
-  const grid = document.getElementById('admin-grid');
+  const grid = dom.grid;
   if (!grid) return;
 
   const filteredPosts = getAdminFilteredPosts();
@@ -289,27 +420,22 @@ async function renderAdminGrid() {
   const totalPhotos = posts.flatMap(p => p.photos || []).length;
   const totalGuests = posts.length;
   const totalMessages = posts.filter(p => p.msg && p.msg !== '(사진만 공유)').length;
-  // Guest screen-admin stats
-  const s1 = document.querySelector('.stat-card:nth-child(1) .stat-value');
-  const s2 = document.querySelector('.stat-card:nth-child(2) .stat-value');
-  const s3 = document.querySelector('.stat-card:nth-child(3) .stat-value');
-  if (s1) s1.textContent = totalPhotos;
-  if (s2) s2.textContent = totalGuests;
-  if (s3) s3.textContent = totalMessages;
-  // Operator panel-admin stats
-  const ap = document.getElementById('admin-photo-count');
-  const ag = document.getElementById('admin-guest-count');
-  const am = document.getElementById('admin-message-count');
-  if (ap) ap.textContent = totalPhotos;
-  if (ag) ag.textContent = totalGuests;
-  if (am) am.textContent = totalMessages;
+
+  if (dom.statValues?.length >= 3) {
+    dom.statValues[0].textContent = totalPhotos;
+    dom.statValues[1].textContent = totalGuests;
+    dom.statValues[2].textContent = totalMessages;
+  }
+  if (dom.photoCount) dom.photoCount.textContent = totalPhotos;
+  if (dom.guestCount) dom.guestCount.textContent = totalGuests;
+  if (dom.messageCount) dom.messageCount.textContent = totalMessages;
 
   grid.innerHTML = '';
   if (!adminEventCode) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text-muted);">
       <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">🗂️</div>
       <div style="font-size:13px;">확인할 결혼식을 먼저 선택해 주세요</div></div>`;
-    renderAdminMessageList([]);
+    renderAdminMessageList([], context);
     return;
   }
 
@@ -318,14 +444,16 @@ async function renderAdminGrid() {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text-muted);">
       <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">📂</div>
       <div style="font-size:13px;">${msg}</div></div>`;
-    renderAdminMessageList(filteredPosts);
+    renderAdminMessageList(filteredPosts, context);
     return;
   }
 
   allPhotos.forEach((item, i) => {
     const normalizedSide = normalizeAdminSideLabel(item.side);
-    const borderColor = normalizedSide === '신랑' ? '#BDDFF7' : normalizedSide === '신부' ? '#F7C5D8' : 'var(--border)';
+    const borderColor = normalizedSide === '신랑' ? '#BDDFF7' : normalizedSide === '신부' ? '#F7C5D8' : 'rgba(201,169,110,0.35)';
     const sideText = normalizedSide ? `[${normalizedSide}측] ` : '';
+    const safeSrc = typeof safeTxt === 'function' ? safeTxt(item.src) : String(item.src ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const safeBadge = typeof safeTxt === 'function' ? safeTxt(`${sideText}${item.name} · ${item.time}`) : String(`${sideText}${item.name} · ${item.time}`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const deleteButton = item.canAdminDelete
       ? `<button class="admin-icon-btn" id="delete-btn-${i}" onclick="confirmDelete(${item.postId}, true)" title="관리자 강제삭제">🗑</button>`
       : '';
@@ -333,17 +461,17 @@ async function renderAdminGrid() {
     const wrap = document.createElement('div');
     wrap.className = 'admin-thumb-wrap';
     wrap.innerHTML = `
-      <img src="${item.src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:3px solid ${borderColor};cursor:pointer;display:block;">
-      <div class="admin-thumb-badge" style="font-size:10px;background:rgba(44,31,26,0.55);color:white;position:absolute;bottom:4px;left:4px;right:4px;border-radius:4px;padding:2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sideText}${item.name} · ${item.time}</div>
+      <img src="${safeSrc}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:3px solid ${borderColor};cursor:pointer;display:block;">
+      <div class="admin-thumb-badge" style="font-size:10px;background:rgba(44,31,26,0.55);color:white;position:absolute;bottom:4px;left:4px;right:4px;border-radius:4px;padding:2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeBadge}</div>
       <div class="admin-thumb-actions">
-        <button class="admin-icon-btn" onclick="openPhotoViewer('${item.src}')">🔍</button>
-        <button class="admin-icon-btn" id="dl-btn-${i}" onclick="adminDownloadPhoto('${item.src}', ${i})">⬇</button>
+        <button class="admin-icon-btn" onclick='openPhotoViewer(${JSON.stringify(item.src)})'>🔍</button>
+        <button class="admin-icon-btn" id="dl-btn-${i}" onclick='adminDownloadPhoto(${JSON.stringify(item.src)}, ${i})'>⬇</button>
         ${deleteButton}
       </div>`;
     grid.appendChild(wrap);
   });
 
-  renderAdminMessageList(filteredPosts);
+  renderAdminMessageList(filteredPosts, context);
 }
 
 function adminDownloadPhoto(src, i) {
@@ -407,6 +535,27 @@ function confirmDelete(postId, adminForce = false) {
   }
 }
 
+function updateConfirmDots() {
+  const value = (document.getElementById('delete-pin-confirm')?.value || '').slice(0, 4);
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`cdot-${i}`);
+    if (!dot) continue;
+    dot.classList.toggle('filled', i < value.length);
+    dot.style.background = i < value.length ? 'var(--deep-rose)' : 'var(--line, #E7DED8)';
+  }
+}
+
+function closeDeleteModal() {
+  const modal = document.getElementById('delete-modal');
+  const input = document.getElementById('delete-pin-confirm');
+  const error = document.getElementById('delete-pin-error');
+  if (modal) modal.style.display = 'none';
+  if (input) input.value = '';
+  if (error) error.textContent = '';
+  updateConfirmDots();
+  deleteTargetPostId = null;
+}
+
 async function deletePost(adminForce = false) {
   if (deleteTargetPostId === null) return;
   const post = posts.find(p => p.id === deleteTargetPostId);
@@ -425,7 +574,7 @@ async function deletePost(adminForce = false) {
 
   deleteTargetPostId = null;
   await loadPosts();
-  renderTimeline();
-  renderAdminGrid();
+  await renderTimeline({ skipReload: true });
+  await renderAdminGrid(getVisibleAdminContext(), { skipReload: true });
   showToast(adminForce ? '관리자 권한으로 게시물을 삭제했어요' : '게시물이 삭제되었어요');
 }

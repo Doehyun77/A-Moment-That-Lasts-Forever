@@ -44,8 +44,7 @@ function renderPreviewStrip() {
     del.textContent = '✕';
     del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--deep-rose);color:white;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1;';
     del.onclick = () => {
-      pendingPhotos.splice(idx, 1);
-      renderPreviewStrip();
+      removePhoto(idx);
     };
     wrap.appendChild(img);
     wrap.appendChild(del);
@@ -53,7 +52,11 @@ function renderPreviewStrip() {
   });
 }
 
-function removePhoto(idx) {}   // 하위 호환용
+function removePhoto(idx) {
+  pendingPhotos.splice(idx, 1);
+  pendingFiles.splice(idx, 1);
+  renderPreviewStrip();
+}
 
 function updateCharCount() {
   document.getElementById('char-count').textContent =
@@ -67,6 +70,26 @@ function openPinSetModal() {
     return;
   }
   submitUpload();
+}
+
+function updatePinDots() {
+  const value = (document.getElementById('delete-pin-input')?.value || '').slice(0, 4);
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    if (!dot) continue;
+    dot.classList.toggle('filled', i < value.length);
+    dot.style.background = i < value.length ? 'var(--deep-rose)' : 'var(--line, #E7DED8)';
+  }
+}
+
+function closePinSetModal() {
+  const modal = document.getElementById('pin-set-modal');
+  const input = document.getElementById('delete-pin-input');
+  const error = document.getElementById('pin-set-error');
+  if (modal) modal.style.display = 'none';
+  if (input) input.value = '';
+  if (error) error.textContent = '';
+  updatePinDots();
 }
 
 // ── 게시물 공유 ───────────────────────────────────
@@ -89,7 +112,7 @@ function submitUpload() {
     document.getElementById('message-input').value   = '';
     document.getElementById('char-count').textContent = '0';
     renderPreviewStrip();
-    renderAdminGrid();
+    await renderAdminGrid(getVisibleAdminContext(), { skipReload: true });
     showToast('공유되었습니다 💌');
     setTimeout(() => showScreen('gallery'), 1200);
   });

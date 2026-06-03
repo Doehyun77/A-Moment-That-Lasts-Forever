@@ -363,7 +363,7 @@
     display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
   }
   .gallery-header-top {
-    display: flex; align-items: center; justify-content: center; position: relative;
+    display: flex; align-items: center; justify-content: center; position: relative; width: 100%;
   }
   .gallery-header-top .refresh-btn {
     position: absolute; right: 0;
@@ -2431,6 +2431,13 @@ body {
 }
 .todo-item.done { opacity: 0.55; }
 .todo-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); }
+/* 체크 후 fade-out 애니메이션은 toggleTodo에서 inline style로 처리 */
+/* 새 메모 추가 시 슬라이드인 */
+@keyframes todoSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.todo-item { animation: todoSlideIn 0.25s ease-out; }
 .todo-cb {
   width: 18px; height: 18px;
   border-radius: 50%;
@@ -2725,22 +2732,24 @@ body {
 .site-card .act-btn.danger:hover { border-color: var(--red); background: rgba(176,90,90,0.06); }
 
 /* ═══════════════ UPLOAD MANAGEMENT ═══════════════ */
-#screen-admin { background: var(--ivory); }
-.admin-body {
+#screen-operator #panel-admin {
+  background: transparent;
+}
+#screen-operator #panel-admin .admin-body {
   flex: 1;
   width: 100%;
   max-width: 1040px;
   margin: 0 auto;
   padding: 24px 32px 60px;
 }
-.admin-event-selector {
+#screen-operator #panel-admin .admin-event-selector {
   background: var(--card);
   border: 1px solid rgba(255,255,255,.75);
   border-radius: 18px;
   padding: 20px 24px;
   margin-bottom: 20px;
 }
-.admin-event-selector .selector-label {
+#screen-operator #panel-admin .admin-event-selector .selector-label {
   font-size: 11px;
   font-weight: 700;
   color: var(--deep-rose);
@@ -2751,7 +2760,7 @@ body {
   gap: 6px;
 }
 /* 드롭다운 — 기존 UI 스타일 맞춤 */
-.admin-event-selector select {
+#screen-operator #panel-admin .admin-event-selector select {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid rgba(139,74,56,0.12);
@@ -2766,50 +2775,87 @@ body {
   transition: border-color 0.2s ease;
   outline: none;
 }
-.admin-event-selector select:focus { border-color: var(--rose); }
-.admin-event-summary {
+#screen-operator #panel-admin .admin-event-selector select:focus { border-color: var(--rose); }
+#screen-operator #panel-admin .admin-event-selector select optgroup {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 6px 2px 2px;
+}
+/* ── 이벤트 필터 탭 ── */
+#screen-operator #panel-admin .admin-event-filter-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 3px;
+}
+#screen-operator #panel-admin .admin-ev-filter-btn {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+#screen-operator #panel-admin .admin-ev-filter-btn.active {
+  background: var(--white);
+  color: var(--deep-rose);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+#screen-operator #panel-admin .admin-ev-filter-btn:hover:not(.active) {
+  color: var(--text);
+}
+#screen-operator #panel-admin .admin-event-summary {
   margin-top: 10px;
   font-size: 12px;
   color: var(--text-muted);
   line-height: 1.6;
   min-height: 20px;
 }
-.admin-stats-row {
+#screen-operator #panel-admin .admin-stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 20px;
 }
-.admin-stat-card {
+#screen-operator #panel-admin .admin-stat-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 16px;
   text-align: center;
 }
-.admin-stat-value {
+#screen-operator #panel-admin .admin-stat-value {
   font-family: 'Cormorant Garamond', serif;
   font-size: 26px;
   font-weight: 600;
   color: var(--deep-rose);
   margin-bottom: 2px;
 }
-.admin-stat-label { font-size: 11px; color: var(--text-muted); }
-.admin-filter-bar {
+#screen-operator #panel-admin .admin-stat-label { font-size: 11px; color: var(--text-muted); }
+#screen-operator #panel-admin .admin-filter-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
 }
-.admin-filter-title { font-size: 13px; font-weight: 600; color: var(--text-soft); }
-.admin-filter-group {
+#screen-operator #panel-admin .admin-filter-title { font-size: 13px; font-weight: 600; color: var(--text-soft); }
+#screen-operator #panel-admin .admin-filter-group {
   display: flex;
   gap: 3px;
   background: var(--cream);
   border-radius: 10px;
   padding: 3px;
 }
-.admin-filter-btn {
+#screen-operator #panel-admin .admin-filter-btn {
   padding: 5px 12px;
   border: none;
   border-radius: 8px;
@@ -2821,14 +2867,14 @@ body {
   font-family: 'Noto Sans KR', sans-serif;
   transition: all 0.2s;
 }
-.admin-filter-btn.active { background: white; color: var(--deep-rose); box-shadow: 0 1px 3px var(--shadow); }
-.admin-grid {
+#screen-operator #panel-admin .admin-filter-btn.active { background: white; color: var(--deep-rose); box-shadow: 0 1px 3px var(--shadow); }
+#screen-operator #panel-admin .admin-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-bottom: 24px;
 }
-.admin-thumb {
+#screen-operator #panel-admin .admin-thumb {
   aspect-ratio: 1;
   border-radius: 10px;
   background: var(--cream);
@@ -2841,9 +2887,9 @@ body {
   cursor: pointer;
   transition: border-color 0.2s;
 }
-.admin-thumb:hover { border-color: var(--rose); }
-.admin-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.admin-thumb .thumb-badge {
+#screen-operator #panel-admin .admin-thumb:hover { border-color: var(--rose); }
+#screen-operator #panel-admin .admin-thumb img { width: 100%; height: 100%; object-fit: cover; }
+#screen-operator #panel-admin .admin-thumb .thumb-badge {
   position: absolute;
   bottom: 4px; left: 4px; right: 4px;
   background: rgba(44,31,26,0.55);
@@ -2856,17 +2902,17 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.empty-state {
+#screen-operator #panel-admin .empty-state {
   text-align: center;
   padding: 40px 20px;
   color: var(--text-muted);
 }
-.empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.35; }
-.empty-state .empty-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text-soft); }
-.empty-state .empty-desc { font-size: 12px; line-height: 1.6; }
+#screen-operator #panel-admin .empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.35; }
+#screen-operator #panel-admin .empty-state .empty-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text-soft); }
+#screen-operator #panel-admin .empty-state .empty-desc { font-size: 12px; line-height: 1.6; }
 
-.admin-message-list { display: flex; flex-direction: column; gap: 8px; }
-.upload-item {
+#screen-operator #panel-admin .admin-message-list { display: flex; flex-direction: column; gap: 8px; }
+#screen-operator #panel-admin .upload-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -2875,19 +2921,19 @@ body {
   border-radius: 12px;
   background: #FFFCFA;
 }
-.upload-item-thumbs { display: flex; gap: 6px; flex-shrink: 0; }
-.upload-item-thumbs img {
+#screen-operator #panel-admin .upload-item-thumbs { display: flex; gap: 6px; flex-shrink: 0; }
+#screen-operator #panel-admin .upload-item-thumbs img {
   width: 48px; height: 48px;
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid var(--border);
 }
-.upload-item-body { flex: 1; min-width: 0; }
-.upload-item-name { font-size: 12px; font-weight: 600; color: var(--text); }
-.upload-item-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-.upload-item-msg { font-size: 12px; color: var(--text-soft); margin-top: 6px; line-height: 1.5; }
-.admin-actions { display: flex; gap: 10px; }
-.admin-actions button {
+#screen-operator #panel-admin .upload-item-body { flex: 1; min-width: 0; }
+#screen-operator #panel-admin .upload-item-name { font-size: 12px; font-weight: 600; color: var(--text); }
+#screen-operator #panel-admin .upload-item-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+#screen-operator #panel-admin .upload-item-msg { font-size: 12px; color: var(--text-soft); margin-top: 6px; line-height: 1.5; }
+#screen-operator #panel-admin .admin-actions { display: flex; gap: 10px; }
+#screen-operator #panel-admin .admin-actions button {
   flex: 1;
   padding: 11px;
   border: 1px solid var(--rose);
@@ -2900,7 +2946,7 @@ body {
   transition: all 0.2s;
   font-weight: 500;
 }
-.admin-actions button:hover { background: var(--rose); color: white; }
+#screen-operator #panel-admin .admin-actions button:hover { background: var(--rose); color: white; }
 
 /* ═══════════════ TOAST ═══════════════ */
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -2921,9 +2967,9 @@ body {
   .sidebar .sidebar-item { justify-content: center; padding: 10px; }
   .sidebar .sidebar-item-icon { width: auto; font-size: 18px; }
   .main-area { padding: 16px; max-width: 100vw; }
-  .admin-grid { grid-template-columns: repeat(3, 1fr); }
+  #screen-operator #panel-admin .admin-grid { grid-template-columns: repeat(3, 1fr); }
   .manage-body { padding: 16px; }
-  .admin-body { padding: 16px; }
+  #screen-operator #panel-admin .admin-body { padding: 16px; }
   .manage-toolbar { flex-direction: column; }
   .monthly-chart-section { padding: 18px 16px 14px; }
   .status-ticker-wrap { height: 30px; border-radius: 15px; }
