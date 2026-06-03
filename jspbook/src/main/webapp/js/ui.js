@@ -269,7 +269,7 @@ async function renderManageScreen() {
 
   updateManageSummary(allItems, filteredItems, today, future, past);
   applyManageSectionVisibility(today, future, past);
-  renderTodaySiteList('today-list', today, 'today');
+  renderCompactSiteList('today-list', today, 'today');
   renderCompactSiteList('future-list', future, 'future');
   renderCompactSiteList('past-list', past, 'past');
 }
@@ -322,7 +322,7 @@ function renderCompactSiteList(containerId, sites, status) {
 
   sites.forEach((s) => {
     const card = document.createElement('div');
-    card.className = 'site-card' + (status === 'past' ? ' muted' : '');
+    card.className = 'site-card' + (status === 'past' ? ' muted' : '') + (status === 'today' ? ' today-highlight' : '');
     card.onclick = () => openSiteManagePreview(s, status);
     const ddayClass = 'card-dday' + (status === 'today' ? ' today' : '');
     card.innerHTML = `
