@@ -142,10 +142,6 @@
             </div>
           </div>
           <div class="todo-wrap" id="todo-list">
-            <div class="todo-item">
-              <div class="todo-cb" onclick="toggleTodo(this)"></div>
-              <span class="todo-text">운영 메모를 자유롭게 남겨 주세요</span>
-            </div>
           </div>
           <div class="todo-input-row">
             <input type="text" id="todo-input" placeholder="메모 추가 (예: QR 만료 3건 확인)" onkeydown="if(event.key==='Enter') addTodo()">
@@ -238,6 +234,12 @@
     <div class="admin-body" style="padding:24px 0 60px 0;">
       <div class="admin-event-selector">
       <div class="selector-label">💒 EVENT</div>
+      <div class="admin-event-filter-tabs">
+        <button class="admin-ev-filter-btn active" data-filter="all" onclick="setAdminEventFilter('all')">전체</button>
+        <button class="admin-ev-filter-btn" data-filter="today" onclick="setAdminEventFilter('today')">📌 오늘</button>
+        <button class="admin-ev-filter-btn" data-filter="future" onclick="setAdminEventFilter('future')">📅 예정</button>
+        <button class="admin-ev-filter-btn" data-filter="past" onclick="setAdminEventFilter('past')">📁 지난</button>
+      </div>
       <select id="operator-admin-event-select" onchange="setAdminEventCode(this.value)">
         <option value="">행사를 선택해 주세요</option>
       </select>

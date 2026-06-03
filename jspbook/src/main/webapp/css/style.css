@@ -363,7 +363,7 @@
     display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
   }
   .gallery-header-top {
-    display: flex; align-items: center; justify-content: center; position: relative;
+    display: flex; align-items: center; justify-content: center; position: relative; width: 100%;
   }
   .gallery-header-top .refresh-btn {
     position: absolute; right: 0;
@@ -2431,6 +2431,13 @@ body {
 }
 .todo-item.done { opacity: 0.55; }
 .todo-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); }
+/* 체크 후 fade-out 애니메이션은 toggleTodo에서 inline style로 처리 */
+/* 새 메모 추가 시 슬라이드인 */
+@keyframes todoSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.todo-item { animation: todoSlideIn 0.25s ease-out; }
 .todo-cb {
   width: 18px; height: 18px;
   border-radius: 50%;
@@ -2769,6 +2776,43 @@ body {
   outline: none;
 }
 #screen-operator #panel-admin .admin-event-selector select:focus { border-color: var(--rose); }
+#screen-operator #panel-admin .admin-event-selector select optgroup {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 6px 2px 2px;
+}
+/* ── 이벤트 필터 탭 ── */
+#screen-operator #panel-admin .admin-event-filter-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 3px;
+}
+#screen-operator #panel-admin .admin-ev-filter-btn {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+#screen-operator #panel-admin .admin-ev-filter-btn.active {
+  background: var(--white);
+  color: var(--deep-rose);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+#screen-operator #panel-admin .admin-ev-filter-btn:hover:not(.active) {
+  color: var(--text);
+}
 #screen-operator #panel-admin .admin-event-summary {
   margin-top: 10px;
   font-size: 12px;

@@ -37,6 +37,7 @@ let currentFilter = 'all';
 let adminFilter   = 'all';
 let adminEvents   = [];
 let adminEventCode = '';
+let adminEventFilter = 'all';
 
 let screenHistory    = [];
 let currentScreenName = 'login';

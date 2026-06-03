@@ -184,10 +184,14 @@ function renderAdminEventSummary(context) {
   const selected = getAdminSelectedEvent();
   if (!summary) return;
   if (!selected) {
-    summary.textContent = '';
+    summary.textContent = '⬆ 드롭다운에서 확인할 결혼식을 선택해 주세요';
+    summary.style.padding = '';
+    summary.style.color = 'var(--text-muted)';
     return;
   }
+  summary.style.padding = '';
   summary.textContent = `${selected.groomName} ♥ ${selected.brideName} · ${selected.weddingDate || '-'} · 하객 ${selected.guestCount || 0}명 · 사진 ${selected.photoCount || 0}장`;
+  summary.style.color = 'var(--text-muted)';
 }
 
 function renderAdminEventOptions(context = 'panel-admin') {
@@ -195,12 +199,64 @@ function renderAdminEventOptions(context = 'panel-admin') {
   if (!select) return;
   const previous = adminEventCode;
   select.innerHTML = '<option value="">행사를 선택해 주세요</option>';
+
+  // 상태(today/future/past)별로 그룹핑
+  const groups = { today: [], future: [], past: [] };
   adminEvents.forEach(event => {
-    const option = document.createElement('option');
-    option.value = event.eventCode;
-    option.textContent = `${event.groomName} ♥ ${event.brideName} · ${event.weddingDate || '-'}`;
-    select.appendChild(option);
+    const status = (typeof getSiteStatusByDate === 'function')
+      ? getSiteStatusByDate(event.weddingDate || '')
+      : 'past';
+    if (groups[status]) groups[status].push(event);
   });
+
+  const labels = { today: '📌 오늘의 결혼식', future: '📅 예정된 결혼식', past: '📁 지난 결혼식' };
+  let optionIndex = 0;
+
+  if (adminEventFilter === 'all') {
+    // 전체: optgroup으로 3개 그룹 표시
+    ['today', 'future', 'past'].forEach(status => {
+      const events = groups[status];
+      if (!events.length) return;
+
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = labels[status] + ' (' + events.length + '건)';
+      select.appendChild(optgroup);
+
+      events.forEach(event => {
+        const option = document.createElement('option');
+        option.value = event.eventCode;
+        const date = event.weddingDate || '-';
+        let suffix = '';
+        if (status === 'past' && date && date !== '-') {
+          const diff = Math.floor((new Date() - new Date(date + 'T00:00:00')) / (1000 * 60 * 60 * 24));
+          if (diff > 0) suffix = ' (D+' + diff + ')';
+        }
+        option.textContent = `${event.groomName} ♥ ${event.brideName} · ${date}${suffix}`;
+        optgroup.appendChild(option);
+        optionIndex++;
+      });
+    });
+  } else {
+    // 특정 필터: 해당 그룹만 평탄하게 표시
+    const eventList = groups[adminEventFilter] || [];
+    if (!eventList.length) {
+      select.innerHTML = '<option value="">해당하는 행사가 없어요</option>';
+    } else {
+      eventList.forEach(event => {
+        const option = document.createElement('option');
+        option.value = event.eventCode;
+        const date = event.weddingDate || '-';
+        let suffix = '';
+        if (adminEventFilter === 'past' && date && date !== '-') {
+          const diff = Math.floor((new Date() - new Date(date + 'T00:00:00')) / (1000 * 60 * 60 * 24));
+          if (diff > 0) suffix = ' (D+' + diff + ')';
+        }
+        option.textContent = `${event.groomName} ♥ ${event.brideName} · ${date}${suffix}`;
+        select.appendChild(option);
+        optionIndex++;
+      });
+    }
+  }
 
   if (!adminEvents.length) {
     adminEventCode = '';
@@ -212,12 +268,32 @@ function renderAdminEventOptions(context = 'panel-admin') {
   if (previous && adminEvents.some(event => event.eventCode === previous)) {
     adminEventCode = previous;
   } else {
-    const withUploads = adminEvents.find(event => Number(event.photoCount || 0) > 0 || Number(event.guestCount || 0) > 0);
-    adminEventCode = (withUploads || adminEvents[0]).eventCode;
+    adminEventCode = '';
   }
 
   select.value = adminEventCode;
   renderAdminEventSummary(context);
+}
+
+function setAdminEventFilter(filter, context = 'panel-admin') {
+  adminEventFilter = filter;
+  // 탭 버튼 active 전환
+  document.querySelectorAll('.admin-ev-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  // 현재 선택된 행사가 필터에 없으면 초기화
+  if (adminEventCode) {
+    const status = (typeof getSiteStatusByDate === 'function')
+      ? getSiteStatusByDate(adminEvents.find(e => e.eventCode === adminEventCode)?.weddingDate || '')
+      : 'past';
+    if (filter !== 'all' && status !== filter) {
+      adminEventCode = '';
+      currentEventCode = '';
+    }
+  }
+  renderAdminEventOptions(context);
+  const dom = getAdminDom(context);
+  if (dom.grid) renderAdminGrid(context);
 }
 
 async function loadAdminEvents(renderAfterLoad = false, context = 'panel-admin') {
