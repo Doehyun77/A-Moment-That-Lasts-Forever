@@ -1000,6 +1000,16 @@ async function initApp() {
     console.error('Operator session check failed:', e);
   }
 
+  try {
+    const adminStatus = await api_adminStatus();
+    if (adminStatus && adminStatus.authenticated && currentEventCode) {
+      showScreen('admin');
+      return;
+    }
+  } catch (e) {
+    console.error('Admin session check failed:', e);
+  }
+
   const loginUsername = document.getElementById('login-username');
   if (loginUsername) loginUsername.focus();
 }

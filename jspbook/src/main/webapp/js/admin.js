@@ -117,8 +117,7 @@ async function adminGoHome() {
 }
 
 function getAdminDom(context) {
-  const isOperator = context === 'panel-admin' || document.getElementById('panel-admin')?.classList.contains('active');
-  if (isOperator) {
+  if (context === 'panel-admin') {
     return {
       context: 'panel-admin',
       select: document.getElementById('operator-admin-event-select'),
@@ -131,6 +130,19 @@ function getAdminDom(context) {
       messageCount: document.getElementById('operator-admin-message-count'),
       filterMap: { all: 'operator-admin-filter-all', '신랑': 'operator-admin-filter-groom', '신부': 'operator-admin-filter-bride' }
     };
+  }
+
+  if (context === 'screen-admin') {
+    return {
+      context: 'screen-admin',
+      grid: document.querySelector('#screen-admin #admin-grid'),
+      filterMap: { all: 'admin-filter-all', '신랑': 'admin-filter-groom', '신부': 'admin-filter-bride' },
+      statValues: document.querySelectorAll('#screen-admin .stat-card .stat-value')
+    };
+  }
+
+  if (document.getElementById('panel-admin')?.classList.contains('active')) {
+    return getAdminDom('panel-admin');
   }
 
   return {
@@ -533,27 +545,6 @@ function confirmDelete(postId, adminForce = false) {
   } else {
     deleteTargetPostId = null;
   }
-}
-
-function updateConfirmDots() {
-  const value = (document.getElementById('delete-pin-confirm')?.value || '').slice(0, 4);
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById(`cdot-${i}`);
-    if (!dot) continue;
-    dot.classList.toggle('filled', i < value.length);
-    dot.style.background = i < value.length ? 'var(--deep-rose)' : 'var(--line, #E7DED8)';
-  }
-}
-
-function closeDeleteModal() {
-  const modal = document.getElementById('delete-modal');
-  const input = document.getElementById('delete-pin-confirm');
-  const error = document.getElementById('delete-pin-error');
-  if (modal) modal.style.display = 'none';
-  if (input) input.value = '';
-  if (error) error.textContent = '';
-  updateConfirmDots();
-  deleteTargetPostId = null;
 }
 
 async function deletePost(adminForce = false) {

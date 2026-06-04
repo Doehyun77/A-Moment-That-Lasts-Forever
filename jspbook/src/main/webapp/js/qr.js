@@ -249,12 +249,22 @@ function validateDate(input) {
   updateChecklist();
 }
 
-// ── generateQRCode 오버라이드 ──────────
-const _origGenerateQR = generateQRCode;
-generateQRCode = async function() {
+// ── 사이트 생성 / QR 생성 ──────────
+async function generateQRCode() {
   const groom = document.getElementById('qr-groom').value.trim();
   const bride = document.getElementById('qr-bride').value.trim();
   const date  = document.getElementById('wedding-date').value;
+
+  if (!groom || !bride) {
+    showToast('신랑신부 이름을 입력해 주세요');
+    return;
+  }
+
+  if (!date) {
+    showToast('예식 날짜를 선택해 주세요');
+    return;
+  }
+
   const startVal = document.getElementById('qr-start').value || date;
   const endVal   = document.getElementById('qr-end').value || (() => {
     const d = new Date(date); d.setDate(d.getDate() + 1);
@@ -308,7 +318,7 @@ generateQRCode = async function() {
     showToast('서버 오류가 발생했어요. 다시 시도해 주세요.');
     console.error('Event creation failed:', e);
   }
-};
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const dateInput = document.getElementById('wedding-date');
@@ -325,49 +335,6 @@ document.addEventListener('input', () => updateChecklist());
 // =====================================================
 //  qr.js — QR 코드 생성 / 입장 처리
 // =====================================================
-
-function generateQRCode() {
-    const groom = document.getElementById('qr-groom').value.trim();
-    const bride = document.getElementById('qr-bride').value.trim();
-
-    if (!groom || !bride) {
-        showToast('신랑신부 이름을 입력해 주세요');
-        return;
-    }
-
-    document.getElementById('groom-name').textContent = groom;
-    document.getElementById('bride-name').textContent = bride;
-    document.querySelectorAll('.nav-couple').forEach(el => el.textContent = groom + ' ♥ ' + bride);
-
-    const baseUrl = window.location.origin + window.location.pathname;
-
-    const qrUrl =
-        baseUrl +
-        '?mode=entry' +
-        '&groom=' + encodeURIComponent(groom) +
-        '&bride=' + encodeURIComponent(bride);
-
-    const canvas = document.getElementById('qr-canvas');
-    canvas.innerHTML = '';
-
-    if (qrInstance) {
-        qrInstance.clear();
-    }
-
-    qrInstance = new QRCode(canvas, {
-        text: qrUrl,
-        width: 180,
-        height: 180,
-        colorDark: '#2C1F1A',
-        colorLight: '#FFFFFF',
-        correctLevel: QRCode.CorrectLevel.H
-    });
-
-    document.getElementById('qr-names').textContent = groom + ' ♥ ' + bride;
-    document.getElementById('qr-output').style.display = 'block';
-
-    showToast('QR이 생성되었어요 💌');
-}
 
 function clearQR() {
     const qrOutput = document.getElementById('qr-output');
@@ -589,7 +556,7 @@ window.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
 
     if (params.get('mode') === 'entry') {
-        ['screen-operator','screen-manage','screen-admin','screen-login'].forEach(id => {
+        ['screen-operator','screen-admin','screen-login'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.remove('active');
         });
@@ -609,6 +576,17 @@ window.addEventListener('DOMContentLoaded', function() {
                 applyLandingAvailabilityState(event);
                 document.getElementById('screen-landing').classList.add('active');
                 currentScreenName = 'landing';
+
+                try {
+                    const adminStatus = await api_adminStatus();
+                    if (adminStatus && adminStatus.authenticated) {
+                        adminEventCode = code;
+                        showScreen('admin');
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Admin session check failed:', e);
+                }
 
                 const rawInvUrl = params.get('invUrl');
                 if (rawInvUrl && typeof invitationType !== 'undefined') {
