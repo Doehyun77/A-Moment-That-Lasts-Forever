@@ -22,6 +22,13 @@ function setSort(type) {
   renderTimeline();
 }
 
+async function refreshGallery() {
+  await renderTimeline();
+  if (typeof showToast === 'function') {
+    showToast('갤러리를 새로고침했어요');
+  }
+}
+
 async function renderTimeline(options = {}) {
   if (!options.skipReload) {
     await loadPosts();

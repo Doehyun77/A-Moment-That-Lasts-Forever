@@ -70,6 +70,42 @@ function clearInvitation() {
 let weddingPhotos = [];
 let weddingPhotoFiles = [];
 
+function applyEventGalleryState(event = {}) {
+  const invitationImageUrl = event.invitationImageUrl || '';
+  const invitationLink = event.invitationUrl || '';
+  weddingPhotos = Array.isArray(event.weddingPhotos) ? event.weddingPhotos.filter(Boolean) : [];
+  weddingPhotoFiles = [];
+
+  if (invitationImageUrl) {
+    invitationData = invitationImageUrl;
+    const preview = document.getElementById('invitation-preview');
+    const image = document.getElementById('invitation-img');
+    const drop = document.getElementById('invitation-drop');
+    if (image) image.src = invitationImageUrl;
+    if (preview) preview.style.display = 'block';
+    if (drop) drop.style.display = 'none';
+    if (typeof invitationType !== 'undefined') invitationType = 'image';
+    if (typeof invitationUrl !== 'undefined') invitationUrl = '';
+  } else if (invitationLink) {
+    invitationData = null;
+    if (typeof invitationType !== 'undefined') invitationType = 'url';
+    if (typeof invitationUrl !== 'undefined') invitationUrl = invitationLink;
+    if (typeof previewInvitationUrl === 'function') previewInvitationUrl(invitationLink);
+  } else {
+    invitationData = null;
+    const preview = document.getElementById('invitation-preview');
+    const drop = document.getElementById('invitation-drop');
+    if (preview) preview.style.display = 'none';
+    if (drop) drop.style.display = 'block';
+    if (typeof invitationUrl !== 'undefined') invitationUrl = '';
+    if (typeof clearInvitationUrl === 'function') clearInvitationUrl();
+  }
+
+  renderWeddingPhotoGrid();
+  updateChecklist();
+  refreshCreateWorkspace();
+}
+
 function addWeddingPhotos(e) {
   const files = Array.from(e.target.files);
   const remaining = 8 - weddingPhotos.length;
@@ -281,16 +317,23 @@ async function generateQRCode() {
 
   // DB에 이벤트 생성
   try {
-    const event = await api_createEvent(groom, bride, date, startVal, endVal);
+    const faqPayload = typeof getFaqItemsForSubmit === 'function' ? getFaqItemsForSubmit() : [];
+    const timelinePayload = typeof getTimelineItemsForSubmit === 'function' ? getTimelineItemsForSubmit() : [];
+    const event = await api_createEvent(groom, bride, date, startVal, endVal, faqPayload, timelinePayload);
     currentEventCode = event.eventCode;
+    currentEventInfo = event;
 
     // 사진 업로드 (이미지 청첩장 또는 웨딩 사진)
     const invitationFile = (typeof invitationType === 'undefined' || invitationType === 'image')
       ? document.getElementById('invitation-input').files[0]
       : null;
+    const invitationLink = (typeof invitationType !== 'undefined' && invitationType === 'url' && typeof invitationUrl !== 'undefined')
+      ? invitationUrl.trim()
+      : '';
     const photoFiles = Array.isArray(weddingPhotoFiles) ? weddingPhotoFiles : [];
-    if (invitationFile || (photoFiles && photoFiles.length > 0)) {
-      await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles);
+    if (invitationFile || invitationLink || (photoFiles && photoFiles.length > 0)) {
+      const galleryResult = await api_uploadEventPhotos(currentEventCode, invitationFile, photoFiles, invitationLink);
+      applyEventGalleryState(galleryResult);
     }
 
     // QR 생성 (고유 이벤트 코드 기반, 청첩장 URL·FAQ 파라미터 포함)
@@ -311,6 +354,10 @@ async function generateQRCode() {
       correctLevel: QRCode.CorrectLevel.H
     });
     document.getElementById('qr-names').textContent = groom + ' ♥ ' + bride;
+    const adminCodeEl = document.getElementById('qr-admin-code');
+    if (adminCodeEl) {
+      adminCodeEl.textContent = event.adminCode ? `관리자 코드 : ${event.adminCode}` : '';
+    }
     document.getElementById('qr-output').style.display = 'block';
     document.getElementById('qr-checklist').style.display = 'none';
     showToast('사이트가 생성되었어요 💌');
@@ -339,6 +386,8 @@ document.addEventListener('input', () => updateChecklist());
 function clearQR() {
     const qrOutput = document.getElementById('qr-output');
     if (qrOutput) qrOutput.style.display = 'none';
+    const adminCodeEl = document.getElementById('qr-admin-code');
+    if (adminCodeEl) adminCodeEl.textContent = '';
     refreshCreateWorkspace();
 }
 
@@ -554,14 +603,14 @@ function applyLandingAvailabilityState(event) {
 }
 window.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const isEntryMode = params.get('mode') === 'entry' || !!code;
 
-    if (params.get('mode') === 'entry') {
+    if (isEntryMode) {
         ['screen-operator','screen-admin','screen-login'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.remove('active');
         });
-
-        const code = params.get('code');
 
         if (code) {
             currentEventCode = code;
@@ -579,7 +628,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
                 try {
                     const adminStatus = await api_adminStatus();
-                    if (adminStatus && adminStatus.authenticated) {
+                    if (adminStatus && adminStatus.authenticated && adminStatus.eventCode === code) {
                         adminEventCode = code;
                         showScreen('admin');
                         return;
@@ -588,16 +637,21 @@ window.addEventListener('DOMContentLoaded', function() {
                     console.error('Admin session check failed:', e);
                 }
 
+                applyEventGalleryState(event);
+                if (typeof setFaqItems === 'function') setFaqItems(event.faqItems || []);
+                if (typeof setTimelineItems === 'function') setTimelineItems(event.timelineItems || []);
+
                 const rawInvUrl = params.get('invUrl');
                 if (rawInvUrl && typeof invitationType !== 'undefined') {
                     invitationType = 'url';
                     invitationUrl = rawInvUrl;
+                    if (typeof previewInvitationUrl === 'function') previewInvitationUrl(rawInvUrl);
                 }
 
                 const rawFaq = params.get('faq');
                 if (rawFaq && typeof decodeFaqFromUrl === 'function') {
                     const decoded = decodeFaqFromUrl(rawFaq);
-                    if (decoded.length > 0) faqItems = decoded;
+                    if (decoded.length > 0 && typeof setFaqItems === 'function') setFaqItems(decoded);
                 }
 
                 if (event.entryOpen) {
@@ -627,7 +681,7 @@ window.addEventListener('DOMContentLoaded', function() {
             const rawFaq = params.get('faq');
             if (rawFaq && typeof decodeFaqFromUrl === 'function') {
                 const decoded = decodeFaqFromUrl(rawFaq);
-                if (decoded.length > 0) faqItems = decoded;
+                if (decoded.length > 0 && typeof setFaqItems === 'function') setFaqItems(decoded);
             }
         }
     }

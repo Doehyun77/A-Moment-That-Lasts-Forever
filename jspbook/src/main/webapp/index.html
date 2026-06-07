@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20260604a">
+<link rel="stylesheet" href="css/style.css?v=20260605b">
 </head>
 <body>
 
@@ -66,7 +66,7 @@
         <span class="sidebar-item-icon">📸</span><span>업로드 관리</span>
       </button>
       <div class="sidebar-nav-label">SYSTEM</div>
-      <button class="sidebar-item">
+      <button class="sidebar-item" onclick="switchOperatorTab('logs')">
         <span class="sidebar-item-icon">🧾</span><span>운영 로그</span>
       </button>
       <div class="sidebar-footer">
@@ -140,6 +140,7 @@
               <div class="panel-title">운영 메모</div>
               <div class="panel-sub">체크하면 완료, 엔터로 추가</div>
             </div>
+            <div class="todo-count" id="todo-count">0/7</div>
           </div>
           <div class="todo-wrap" id="todo-list">
           </div>
@@ -290,6 +291,21 @@
   </div> <!-- /admin-body -->
 </div> <!-- /panel-admin -->
 
+  <!-- ── content panel: 운영 로그 ── -->
+  <div id="panel-logs" class="content-panel">
+    <div class="panel" style="margin:24px 0 60px;">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">운영 로그</div>
+          <div class="panel-sub">최신순으로 최근 50개만 유지됩니다</div>
+        </div>
+      </div>
+      <div id="operator-log-list" class="operator-log-list">
+        <div class="operator-log-empty">운영 로그를 불러오는 중...</div>
+      </div>
+    </div>
+  </div> <!-- /panel-logs -->
+
     <!-- ── content panel: 사이트 생성 ── -->
     <div id="panel-create" class="content-panel">
       <div class="main-breadcrumb">SITE CREATION CONSOLE</div>
@@ -380,6 +396,26 @@
           <article class="console-card">
             <div class="console-card-head with-meta">
               <div>
+                <div class="panel-kicker">TIMELINE</div>
+                <h2>예식 타임테이블</h2>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                <button onclick="addDefaultTimelineItems()" class="faq-add-btn">기본안 넣기</button>
+                <button onclick="addTimelineItem()" class="faq-add-btn">＋ 순서 추가</button>
+              </div>
+            </div>
+            <div id="timeline-edit-list"></div>
+            <div id="timeline-edit-empty" style="text-align:center; padding:28px 0; color:var(--text-muted); font-size:13px;">
+              📋 하객에게 보여줄 예식 흐름을 추가해 주세요<br>
+              <span style="font-size:11px; margin-top:6px; display:block; line-height:1.6; color:var(--text-muted);">
+                입장 시작 · 예식 시작 · 단체사진 · 식사 안내 등
+              </span>
+            </div>
+          </article>
+
+          <article class="console-card">
+            <div class="console-card-head with-meta">
+              <div>
                 <div class="panel-kicker">FAQ</div>
                 <h2>자주 묻는 질문</h2>
               </div>
@@ -457,6 +493,7 @@
                 <div id="qr-canvas"></div>
                 <div id="qr-names" class="qr-preview-title"></div>
                 <div id="qr-expiry" class="qr-preview-caption"></div>
+                <div id="qr-admin-code" class="qr-preview-caption" style="margin-top:10px; font-size:12px; color:var(--deep-rose); font-weight:700;"></div>
               </div>
               <div class="qr-preview-actions" style="grid-template-columns:1fr;">
                 <button onclick="downloadQR()" class="console-secondary-btn">QR 저장</button>
@@ -622,7 +659,7 @@
     <div class="gallery-header">
       <div class="gallery-header-top">
         <div class="gallery-count" id="gallery-count">총 0개의 순간</div>
-        <button class="refresh-btn" onclick="renderTimeline()">↻ 새로고침</button>
+        <button class="refresh-btn" onclick="refreshGallery()">↻ 새로고침</button>
       </div>
       <div class="gallery-controls">
         <div class="filter-group">
@@ -757,6 +794,7 @@
       <div id="site-manage-preview-title" style="font-family:'Cormorant Garamond',serif; font-size:24px; color:var(--deep-rose); font-weight:400;"></div>
       <div id="site-manage-preview-date" style="font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
       <div id="site-manage-preview-status" style="font-size:11px; color:var(--text-muted); margin-top:4px; line-height:1.6;"></div>
+      <div id="site-manage-preview-admin-code" style="display:none; margin-top:10px; font-size:12px; color:var(--deep-rose); font-weight:700;"></div>
     </div>
     <!-- QR 코드 -->
     <div id="site-manage-preview-qr" style="display:flex; justify-content:center; align-items:center; padding:16px; background:var(--cream); border-radius:16px; margin-bottom:18px;"></div>
@@ -867,15 +905,16 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="js/state.js?v=20260604a"></script>
-<script src="js/api.js?v=20260604a"></script>
-<script src="js/operator.js?v=20260604a"></script>
-<script src="js/ui.js?v=20260604a"></script>
-<script src="js/gallery.js?v=20260604a"></script>
-<script src="js/upload.js?v=20260604a"></script>
-<script src="js/admin.js?v=20260604a"></script>
-<script src="js/faq.js?v=20260604a"></script>
-<script src="js/invitation.js?v=20260604a"></script>
-<script src="js/qr.js?v=20260604a"></script>
+<script src="js/state.js?v=20260605b"></script>
+<script src="js/api.js?v=20260605b"></script>
+<script src="js/operator.js?v=20260605b"></script>
+<script src="js/ui.js?v=20260605b"></script>
+<script src="js/gallery.js?v=20260605b"></script>
+<script src="js/upload.js?v=20260605b"></script>
+<script src="js/admin.js?v=20260605b"></script>
+<script src="js/faq.js?v=20260605b"></script>
+<script src="js/timeline.js?v=20260605b"></script>
+<script src="js/invitation.js?v=20260605b"></script>
+<script src="js/qr.js?v=20260605b"></script>
 </body>
 </html>

@@ -2,6 +2,13 @@
 //  operator.js — 운영자 콘솔 내비게이션 / TODO
 // =====================================================
 
+let operatorTodoSyncPending = false;
+let operatorTodoQueuedSync = false;
+let operatorTodoQueuedRerender = false;
+let operatorTodoLoadStarted = false;
+let operatorLogLoadStarted = false;
+const MAX_OPERATOR_TODOS = 7;
+
 function showOperatorScreenOnly() {
   document.querySelectorAll('.screen').forEach((screen) => screen.classList.remove('active'));
   const operatorScreen = document.getElementById('screen-operator');
@@ -19,6 +26,7 @@ async function switchPanel(panelId) {
 
   if (panelId === 'panel-dashboard') {
     if (typeof renderOperatorDashboard === 'function') await renderOperatorDashboard();
+    await loadTodos();
   } else if (panelId === 'panel-manage') {
     if (typeof renderManageScreen === 'function') await renderManageScreen();
   } else if (panelId === 'panel-admin') {
@@ -27,6 +35,8 @@ async function switchPanel(panelId) {
     if (typeof updateChecklist === 'function') updateChecklist();
     if (typeof refreshCreateWorkspace === 'function') refreshCreateWorkspace();
     if (typeof clearQR === 'function') clearQR();
+  } else if (panelId === 'panel-logs') {
+    await loadOperatorLogs(true);
   }
 }
 
@@ -53,6 +63,8 @@ async function goLogin(skipLogout = false) {
   if (loginScreen) loginScreen.classList.add('active');
   currentScreenName = 'login';
   screenHistory = [];
+  operatorTodoLoadStarted = false;
+  operatorLogLoadStarted = false;
   if (loginUser) loginUser.focus();
 }
 
@@ -79,7 +91,7 @@ function activateSidebar(idx) {
 }
 
 async function switchOperatorTab(tab) {
-  const map = { home: 0, create: 1, manage: 2, upload: 3 };
+  const map = { home: 0, create: 1, manage: 2, upload: 3, logs: 4 };
   const idx = map[tab] || 0;
 
   showOperatorScreenOnly();
@@ -100,49 +112,221 @@ async function switchOperatorTab(tab) {
     return;
   }
 
+  if (tab === 'logs') {
+    await switchPanel('panel-logs');
+    return;
+  }
+
   await switchPanel('panel-dashboard');
 }
 function updateSidebar() { activateSidebar(0); }
 
-// ── TODO List (localStorage persist) ──
-const TODO_STORAGE_KEY = 'operator-todos';
+function getOperatorLogListElement() {
+  return document.getElementById('operator-log-list');
+}
 
-function loadTodos() {
-  const list = document.getElementById('todo-list');
+function formatOperatorLogTime(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}.${month}.${day} ${hours}:${minutes}`;
+}
+
+function getOperatorLogStatusText(status) {
+  if (status === 'success') return '성공';
+  if (status === 'fail') return '실패';
+  if (status === 'warning') return '주의';
+  return '안내';
+}
+
+function renderOperatorLogs(items = []) {
+  const list = getOperatorLogListElement();
   if (!list) return;
-  // 저장된 메모 복원
-  const saved = localStorage.getItem(TODO_STORAGE_KEY);
-  if (saved) {
-    try {
-      const items = JSON.parse(saved);
-      list.innerHTML = '';
-      items.forEach(item => appendTodoItem(list, item.text, item.done));
-      return;
-    } catch (_) {}
-  }
-  // 기본 예시 메모
+
   list.innerHTML = '';
-  appendTodoItem(list, '운영 메모를 자유롭게 남겨 주세요', false);
-}
+  if (!Array.isArray(items) || items.length === 0) {
+    list.innerHTML = '<div class="operator-log-empty">아직 쌓인 운영 로그가 없어요.</div>';
+    return;
+  }
 
-function saveTodos() {
-  const list = document.getElementById('todo-list');
-  if (!list) return;
-  const items = [];
-  list.querySelectorAll('.todo-item').forEach(el => {
-    const text = el.querySelector('.todo-text')?.textContent || '';
-    const done = el.classList.contains('done');
-    items.push({ text, done });
+  items.forEach((item) => {
+    const row = document.createElement('div');
+    row.className = 'operator-log-item';
+
+    const meta = document.createElement('div');
+    meta.className = 'operator-log-meta';
+    meta.innerHTML = `
+      <span>${formatOperatorLogTime(item.createdAt)}</span>
+      <span class="operator-log-status ${item.status || 'info'}">${getOperatorLogStatusText(item.status)}</span>
+      <span>${item.siteLabel || item.eventCode || '운영자 콘솔'}</span>
+    `;
+
+    const message = document.createElement('div');
+    message.className = 'operator-log-message';
+    message.textContent = item.message || '운영 로그';
+
+    row.appendChild(meta);
+    row.appendChild(message);
+
+    if (item.detail) {
+      const detail = document.createElement('div');
+      detail.className = 'operator-log-detail';
+      detail.textContent = item.detail;
+      row.appendChild(detail);
+    }
+
+    list.appendChild(row);
   });
-  localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(items));
 }
 
-function appendTodoItem(list, text, done = false) {
+async function loadOperatorLogs(force = false) {
+  const list = getOperatorLogListElement();
+  if (!list) return;
+  if (operatorLogLoadStarted && !force) return;
+  operatorLogLoadStarted = true;
+
+  list.innerHTML = '<div class="operator-log-empty">운영 로그를 불러오는 중...</div>';
+
+  try {
+    const result = await api_getOperatorLogs();
+    renderOperatorLogs(Array.isArray(result.items) ? result.items : []);
+  } catch (error) {
+    console.error('운영 로그 로드 실패:', error);
+    list.innerHTML = '<div class="operator-log-empty">운영 로그를 불러오지 못했어요.</div>';
+  }
+}
+
+// ── TODO List (API persist) ──
+function getTodoListElement() {
+  return document.getElementById('todo-list');
+}
+
+function updateTodoMeta() {
+  const input = document.getElementById('todo-input');
+  const countEl = document.getElementById('todo-count');
+  const addBtn = document.querySelector('.todo-add-btn');
+  const count = collectTodoItems().filter(item => item.id !== 'load-error').length;
+  const limitReached = count >= MAX_OPERATOR_TODOS;
+
+  if (countEl) countEl.textContent = `${count}/${MAX_OPERATOR_TODOS}`;
+  if (input) {
+    input.placeholder = limitReached
+      ? `운영 메모는 최대 ${MAX_OPERATOR_TODOS}개까지 추가할 수 있어요`
+      : '메모 추가 (예: QR 만료 3건 확인)';
+  }
+  if (input) input.disabled = limitReached;
+  if (addBtn) addBtn.disabled = limitReached;
+}
+
+function collectTodoItems() {
+  const list = getTodoListElement();
+  if (!list) return [];
+  return Array.from(list.querySelectorAll('.todo-item')).map((el, index) => ({
+    id: el.dataset.id || '',
+    text: el.querySelector('.todo-text')?.textContent?.trim() || '',
+    done: el.classList.contains('done'),
+    sortOrder: index
+  })).filter(item => item.text);
+}
+
+function renderTodoItems(items = []) {
+  const list = getTodoListElement();
+  if (!list) return;
+
+  list.innerHTML = '';
+  if (!Array.isArray(items) || items.length === 0) {
+    updateTodoMeta();
+    return;
+  }
+
+  items.forEach((item, index) => {
+    appendTodoItem(list, item.text, !!item.done, item.id || `todo-${index}`);
+  });
+  updateTodoMeta();
+}
+
+function appendTodoItem(list, text, done = false, id = '', options = {}) {
+  const { interactive = true, placeholder = false } = options;
+
   const item = document.createElement('div');
-  item.className = 'todo-item' + (done ? ' done' : '');
-  const checked = done ? ' checked' : '';
-  item.innerHTML = '<div class="todo-cb' + checked + '" onclick="toggleTodo(this)"></div><span class="todo-text">' + text.replace(/</g,'&lt;') + '</span>';
+  item.className = 'todo-item' + (done ? ' done' : '') + (placeholder ? ' todo-item-placeholder' : '');
+  if (id) item.dataset.id = id;
+  if (!interactive) item.dataset.readonly = 'true';
+
+  const checkbox = document.createElement('div');
+  checkbox.className = 'todo-cb' + (done ? ' checked' : '') + (!interactive ? ' todo-cb-disabled' : '');
+  if (interactive) {
+    checkbox.onclick = () => toggleTodo(checkbox);
+  } else {
+    checkbox.setAttribute('aria-hidden', 'true');
+  }
+
+  const textEl = document.createElement('span');
+  textEl.className = 'todo-text';
+  textEl.textContent = text;
+
+  item.appendChild(checkbox);
+  item.appendChild(textEl);
   list.appendChild(item);
+}
+
+async function loadTodos(force = false) {
+  const list = getTodoListElement();
+  if (!list) return;
+  if (operatorTodoLoadStarted && !force) return;
+  operatorTodoLoadStarted = true;
+
+  list.innerHTML = '<div class="todo-item"><span class="todo-text">메모를 불러오는 중...</span></div>';
+  updateTodoMeta();
+
+  try {
+    const result = await api_getOperatorTodos();
+    const items = Array.isArray(result.items) ? result.items : [];
+    renderTodoItems(items);
+  } catch (error) {
+    console.error('운영 메모 로드 실패:', error);
+    renderTodoItems([{ text: '운영 메모를 불러오지 못했어요', done: false, id: 'load-error' }]);
+  }
+}
+
+async function saveTodos(options = {}) {
+  const { rerender = true } = options;
+  const list = getTodoListElement();
+  if (!list) return;
+
+  if (operatorTodoSyncPending) {
+    operatorTodoQueuedSync = true;
+    operatorTodoQueuedRerender = operatorTodoQueuedRerender || rerender;
+    return;
+  }
+
+  const rawItems = collectTodoItems();
+  const filteredItems = rawItems.filter(item => item.id !== 'placeholder' && item.id !== 'load-error');
+
+  operatorTodoSyncPending = true;
+
+  try {
+    const result = await api_saveOperatorTodos(filteredItems.map(({ text, done }) => ({ text, done })));
+    if (rerender && result && Array.isArray(result.items)) {
+      renderTodoItems(result.items);
+    }
+  } catch (error) {
+    console.error('운영 메모 저장 실패:', error);
+    showToast('운영 메모 저장에 실패했어요');
+  } finally {
+    operatorTodoSyncPending = false;
+    if (operatorTodoQueuedSync) {
+      const queuedRerender = operatorTodoQueuedRerender;
+      operatorTodoQueuedSync = false;
+      operatorTodoQueuedRerender = false;
+      saveTodos({ rerender: queuedRerender });
+    }
+  }
 }
 
 function toggleTodo(el) {
@@ -151,30 +335,32 @@ function toggleTodo(el) {
   const isDone = item.classList.contains('done');
 
   if (!isDone) {
-    // 체크 ON
     el.classList.add('checked');
     item.classList.add('done');
-    saveTodos();
-
-    // 2.2초 후 fade-out 후 제거
     item.dataset.fading = 'true';
     item.style.transition = 'opacity 0.5s, transform 0.5s';
-    item.style.opacity = '0';
-    item.style.transform = 'translateX(20px)';
+
+    saveTodos({ rerender: false });
+
+    requestAnimationFrame(() => {
+      item.style.opacity = '0';
+      item.style.transform = 'translateX(20px)';
+    });
+
     setTimeout(() => {
       if (item.isConnected && item.dataset.fading === 'true') {
         item.remove();
         saveTodos();
       }
-    }, 2200);
+    }, 550);
   } else {
-    // 체크 해제 (되돌리기)
     delete item.dataset.fading;
     el.classList.remove('checked');
     item.classList.remove('done');
     item.style.opacity = '';
     item.style.transform = '';
-    saveTodos();
+    item.style.transition = '';
+    saveTodos({ rerender: false });
   }
 }
 
@@ -182,25 +368,40 @@ function addTodo() {
   const input = document.getElementById('todo-input');
   const text = input?.value.trim();
   if (!input || !text) return;
-  const list = document.getElementById('todo-list');
+  const list = getTodoListElement();
   if (!list) return;
-  appendTodoItem(list, text, false);
+
+  const currentCount = collectTodoItems().filter(item => item.id !== 'load-error').length;
+  if (currentCount >= MAX_OPERATOR_TODOS) {
+    showToast(`운영 메모는 최대 ${MAX_OPERATOR_TODOS}개까지 추가할 수 있어요`);
+    return;
+  }
+
+  const firstItem = list.querySelector('.todo-item');
+  if (firstItem && (firstItem.dataset.id === 'placeholder' || firstItem.dataset.id === 'load-error')) {
+    list.innerHTML = '';
+  }
+
+  appendTodoItem(list, text, false, `draft-${Date.now()}`);
   input.value = '';
+  updateTodoMeta();
   saveTodos();
 }
 
-// 페이지 로드 시 복원
 document.addEventListener('DOMContentLoaded', () => {
-  // operator dashboard 열릴 때 복원
   const observer = new MutationObserver(() => {
     if (document.getElementById('panel-dashboard')?.classList.contains('active')) {
       loadTodos();
-      observer.disconnect();
     }
   });
   observer.observe(document.getElementById('panel-dashboard') || document.body, {
     attributes: true, attributeFilter: ['class']
   });
-  // fallback: 바로 복원
-  setTimeout(loadTodos, 500);
+
+  setTimeout(() => {
+    if (document.getElementById('panel-dashboard')?.classList.contains('active')) {
+      loadTodos();
+    }
+    updateTodoMeta();
+  }, 500);
 });

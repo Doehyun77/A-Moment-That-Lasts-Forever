@@ -30,11 +30,11 @@ async function api_listEvents() {
     return await api_readJson(res, []);
 }
 
-async function api_createEvent(groomName, brideName, weddingDate = '', qrStartDate = '', qrEndDate = '') {
+async function api_createEvent(groomName, brideName, weddingDate = '', qrStartDate = '', qrEndDate = '', faqItems = [], timelineItems = []) {
     const res = await fetch(`${BASE_URL}/api/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groomName, brideName, weddingDate, qrStartDate, qrEndDate })
+        body: JSON.stringify({ groomName, brideName, weddingDate, qrStartDate, qrEndDate, faqItems, timelineItems })
     });
     return await api_readJson(res);
 }
@@ -44,9 +44,10 @@ async function api_fetchEvent(eventCode) {
     return await api_readJson(res);
 }
 
-async function api_uploadEventPhotos(eventCode, invitationFile, photoFiles) {
+async function api_uploadEventPhotos(eventCode, invitationFile, photoFiles, invitationLink = '') {
     const form = new FormData();
     if (invitationFile) form.append('invitation', invitationFile);
+    if (invitationLink) form.append('invitationUrl', invitationLink);
     photoFiles.forEach(f => form.append('photos', f));
     const res = await fetch(`${BASE_URL}/api/events/${eventCode}/gallery`, {
         method: 'POST',
@@ -84,11 +85,11 @@ async function api_clearGuestSession(eventCode) {
     return await api_readJson(res);
 }
 
-async function api_adminLogin(code) {
+async function api_adminLogin(eventCode, code) {
     const res = await fetch(`${BASE_URL}/api/admin-session/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ eventCode, code })
     });
     return await api_readJson(res);
 }
@@ -167,6 +168,25 @@ async function api_operatorLogout() {
         method: 'DELETE'
     });
     return await api_readJson(res);
+}
+
+async function api_getOperatorTodos() {
+    const res = await fetch(`${BASE_URL}/api/operator/todos`);
+    return await api_readJson(res, { success: false, items: [] });
+}
+
+async function api_saveOperatorTodos(items) {
+    const res = await fetch(`${BASE_URL}/api/operator/todos`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items })
+    });
+    return await api_readJson(res, { success: false, items: [] });
+}
+
+async function api_getOperatorLogs() {
+    const res = await fetch(`${BASE_URL}/api/operator/logs`);
+    return await api_readJson(res, { success: false, items: [] });
 }
 
 async function api_downloadPhoto(src, index) {

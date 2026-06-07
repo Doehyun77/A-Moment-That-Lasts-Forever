@@ -15,6 +15,18 @@ function closeAdminModal() {
   document.getElementById('admin-login-modal').style.display = 'none';
 }
 
+function applyAdminCoupleNames(event) {
+  const groom = event?.groomName || '신랑';
+  const bride = event?.brideName || '신부';
+  const groomEl = document.getElementById('groom-name');
+  const brideEl = document.getElementById('bride-name');
+  if (groomEl) groomEl.textContent = groom;
+  if (brideEl) brideEl.textContent = bride;
+  document.querySelectorAll('.nav-couple').forEach(el => {
+    el.textContent = `${groom} ♥ ${bride}`;
+  });
+}
+
 async function submitAdminCode() {
   const input = document.getElementById('admin-code-input').value.trim();
   if (!input) {
@@ -22,13 +34,27 @@ async function submitAdminCode() {
     return;
   }
 
-  const result = await api_adminLogin(input);
+  const loginEventCode = currentEventCode || currentEventInfo?.eventCode || new URLSearchParams(window.location.search).get('code') || '';
+  if (!loginEventCode) {
+    document.getElementById('admin-code-error').textContent = '행사 정보를 먼저 불러와 주세요';
+    return;
+  }
+
+  const result = await api_adminLogin(loginEventCode, input);
   if (result.success) {
     closeAdminModal();
-    // QR 입장 모드: URL의 code를 admin 페이지에 바로 매핑
-    if (currentEventCode) {
-      adminEventCode = currentEventCode;
+    adminEventCode = result.eventCode || loginEventCode;
+    currentEventCode = adminEventCode;
+
+    try {
+      const event = await api_fetchEvent(adminEventCode);
+      currentEventInfo = event;
+      applyAdminCoupleNames(event);
+    } catch (error) {
+      console.error('관리자 행사 정보 로드 실패:', error);
+      if (currentEventInfo) applyAdminCoupleNames(currentEventInfo);
     }
+
     currentScreenName = 'landing';
     showScreen('admin');
     return;
@@ -330,11 +356,8 @@ async function setAdminEventCode(eventCode, context = 'panel-admin') {
   const select = getAdminDom(context).select;
   if (select && select.value !== adminEventCode) select.value = adminEventCode;
   renderAdminEventSummary(context);
-  // 선택한 행사의 신랑/신부 이름을 nav에 반영
-  const selected = getAdminSelectedEvent();
-  document.querySelectorAll('.nav-couple').forEach(el => {
-    el.textContent = selected ? `${selected.groomName} ♥ ${selected.brideName}` : '신랑 ♥ 신부';
-  });
+  const selected = getAdminSelectedEvent() || currentEventInfo;
+  applyAdminCoupleNames(selected);
   await renderAdminGrid(context);
 }
 
@@ -406,12 +429,9 @@ async function renderAdminGrid(context = 'panel-admin', options = {}) {
     await loadPosts();
   }
 
-  // nav-couple을 선택한 행사의 신랑/신부 이름으로 업데이트
   if (adminEventCode) {
-    const selected = getAdminSelectedEvent();
-    document.querySelectorAll('.nav-couple').forEach(el => {
-      el.textContent = selected ? `${selected.groomName} ♥ ${selected.brideName}` : '신랑 ♥ 신부';
-    });
+    const selected = getAdminSelectedEvent() || currentEventInfo;
+    applyAdminCoupleNames(selected);
   }
 
   const grid = dom.grid;

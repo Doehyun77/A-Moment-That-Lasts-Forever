@@ -24,10 +24,16 @@
     overflow-x: hidden;
   }
 
+  #slide-wrapper,
+  .screen,
+  .screen-body {
+    background: var(--ivory);
+  }
+
   /* ── SCREENS ── */
   .screen { display: none; min-height: 100vh; }
   .screen.active { display: flex; flex-direction: column; }
-  .screen-body { position:absolute; width:100%; top:0; left:0; background:var(--ivory); min-height:calc(100vh - 60px); overflow-y:auto; }
+  .screen-body { position:absolute; width:100%; top:0; left:0; background:var(--ivory); min-height:100dvh; overflow-y:auto; box-sizing:border-box; }
   .screen-body.is-active { position:relative; }
   .screen-body.slide-from-right { animation: slideFromRight 0.3s cubic-bezier(0.4,0,0.2,1) forwards; }
   .screen-body.slide-from-left  { animation: slideFromLeft  0.3s cubic-bezier(0.4,0,0.2,1) forwards; }
@@ -363,10 +369,17 @@
     display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
   }
   .gallery-header-top {
-    display: flex; align-items: center; justify-content: center; position: relative; width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+  }
+  .gallery-count {
+    margin-right: auto;
   }
   .gallery-header-top .refresh-btn {
-    position: absolute; right: 0;
+    position: static;
   }
   .gallery-controls {
     display: flex; align-items: center; gap: clamp(3px, 1vw, 6px); flex-wrap: nowrap;
@@ -449,6 +462,45 @@
   transition: all 0.2s;
 }
 .faq-edit-remove:hover { background: var(--blush); color: var(--deep-rose); }
+.timeline-edit-item .form-input { background: var(--white); }
+.timeline-timeline-empty {}
+.timeline-guest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.timeline-guest-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.timeline-guest-item:last-child { border-bottom: none; }
+.timeline-guest-time {
+  min-width: 56px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--deep-rose);
+}
+.timeline-guest-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.timeline-guest-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.timeline-empty-msg {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 48px 20px;
+  line-height: 1.8;
+}
 
 /* ── FAQ GUEST (하객 화면) ── */
 .faq-guest-item {
@@ -2419,6 +2471,16 @@ body {
 
 /* ═══════════════ TODO LIST ═══════════════ */
 .todo-wrap { display: flex; flex-direction: column; gap: 8px; }
+.todo-count {
+  min-width: 42px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(139,74,56,0.08);
+  color: var(--rose);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
 .todo-item {
   display: flex;
   align-items: center;
@@ -2475,6 +2537,11 @@ body {
   outline: none;
 }
 .todo-input-row input:focus { border-color: var(--rose); }
+.todo-input-row input:disabled {
+  cursor: not-allowed;
+  background: rgba(248,245,240,0.35);
+  color: var(--text-muted);
+}
 .todo-input-row input::placeholder { color: rgba(160,128,112,0.35); }
 .todo-add-btn {
   padding: 8px 14px;
@@ -2490,6 +2557,87 @@ body {
   transition: all 0.15s;
 }
 .todo-add-btn:hover { background: var(--rose); color: white; }
+.todo-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+  color: var(--rose);
+  transform: none;
+}
+
+.operator-log-list {
+  display: grid;
+  gap: 10px;
+}
+
+.operator-log-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--white);
+}
+
+.operator-log-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.operator-log-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.operator-log-status.success {
+  background: rgba(46, 125, 50, 0.10);
+  color: #2e7d32;
+}
+
+.operator-log-status.fail {
+  background: rgba(198, 40, 40, 0.10);
+  color: #c62828;
+}
+
+.operator-log-status.warning {
+  background: rgba(239, 108, 0, 0.12);
+  color: #ef6c00;
+}
+
+.operator-log-status.info {
+  background: rgba(90, 74, 64, 0.10);
+  color: var(--text-soft);
+}
+
+.operator-log-message {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.operator-log-detail {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.operator-log-empty {
+  padding: 28px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 13px;
+  background: rgba(255,255,255,0.65);
+}
 
 /* ═══════════════ MONTHLY CHART (original SVG) ═══════════════ */
 .monthly-chart-section {

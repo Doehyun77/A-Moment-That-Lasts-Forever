@@ -39,6 +39,20 @@ public class WeddingEvent {
     @Column(name="deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name="invitation_url")
+    private String invitationUrl;
+
+    @Column(name="admin_code", nullable = false, length = 12)
+    private String adminCode;
+
+    @Lob
+    @Column(name="faq_json", columnDefinition = "TEXT")
+    private String faqJson;
+
+    @Lob
+    @Column(name="timeline_json", columnDefinition = "TEXT")
+    private String timelineJson;
+
     public Long getId() {
         return id;
     }
@@ -79,6 +93,22 @@ public class WeddingEvent {
         return deletedAt;
     }
 
+    public String getInvitationUrl() {
+        return invitationUrl;
+    }
+
+    public String getAdminCode() {
+        return adminCode;
+    }
+
+    public String getFaqJson() {
+        return faqJson;
+    }
+
+    public String getTimelineJson() {
+        return timelineJson;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -117,5 +147,21 @@ public class WeddingEvent {
 
     public void setDeletedAt(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public void setInvitationUrl(String invitationUrl) {
+        this.invitationUrl = invitationUrl;
+    }
+
+    public void setAdminCode(String adminCode) {
+        this.adminCode = adminCode;
+    }
+
+    public void setFaqJson(String faqJson) {
+        this.faqJson = faqJson;
+    }
+
+    public void setTimelineJson(String timelineJson) {
+        this.timelineJson = timelineJson;
     }
 }

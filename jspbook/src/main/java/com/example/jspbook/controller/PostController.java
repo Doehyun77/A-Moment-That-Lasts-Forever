@@ -92,8 +92,8 @@ public class PostController {
 		WeddingEvent event = eventRepository.findByEventCode(eventCode)
 				.orElseThrow(() -> new RuntimeException("행사를 찾을 수 없습니다."));
 		GuestSessionInfo guest = GuestSessionController.getSessionInfo(session, eventCode);
-        Set<Long> likedPostIds = getLikedPostIds(session);
-        boolean isAdmin = AdminSessionController.isAuthenticated(session);
+		Set<Long> likedPostIds = getLikedPostIds(session);
+		boolean isAdmin = AdminSessionController.isAuthenticatedForEvent(session, eventCode);
 
 		return postRepository.findByEventOrderByCreatedAtDesc(event).stream().map(post -> {
 			Map<String, Object> map = new HashMap<>();
@@ -153,7 +153,7 @@ public class PostController {
 	@DeleteMapping("/{postId}")
 	public Map<String, Object> deletePost(@PathVariable Long postId, HttpSession session) {
 		Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("게시물을 찾을 수 없습니다."));
-        if (AdminSessionController.isAuthenticated(session)) {
+        if (AdminSessionController.isAuthenticatedForEvent(session, post.getEvent().getEventCode())) {
             postRepository.delete(post);
             return Map.of("success", true, "deletedBy", "admin");
         }

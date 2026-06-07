@@ -244,6 +244,7 @@ async function renderManageScreen() {
         weddingDate: e.weddingDate || '',
         qrStartDate: e.qrStartDate || '',
         qrEndDate: e.qrEndDate || '',
+        adminCode: e.adminCode || '',
         guestCount: e.guestCount || 0,
         photoCount: e.photoCount || 0,
         status
@@ -475,9 +476,9 @@ function downloadSitePreviewQr() {
   showToast('QR 이미지를 저장했어요');
 }
 
-function openSiteManagePreviewFromButton(domEvent, eventCode, status, groom, bride, date, guestCount, photoCount) {
+function openSiteManagePreviewFromButton(domEvent, eventCode, status, groom, bride, date, guestCount, photoCount, adminCode = '') {
   stopActionPropagation(domEvent);
-  openSiteManagePreview({ eventCode, groom, bride, date, guestCount, photoCount }, status);
+  openSiteManagePreview({ eventCode, groom, bride, date, guestCount, photoCount, adminCode }, status);
 }
 
 function openSiteManagePreview(site, status) {
@@ -485,6 +486,7 @@ function openSiteManagePreview(site, status) {
   const title = document.getElementById('site-manage-preview-title');
   const date = document.getElementById('site-manage-preview-date');
   const statusEl = document.getElementById('site-manage-preview-status');
+  const adminCodeEl = document.getElementById('site-manage-preview-admin-code');
   const linkInput = document.getElementById('site-manage-preview-link');
   const qrWrap = document.getElementById('site-manage-preview-qr');
 
@@ -495,6 +497,10 @@ function openSiteManagePreview(site, status) {
   title.textContent = site.groom + ' ♥ ' + site.bride;
   date.textContent = site.date || '-';
   statusEl.textContent = getSitePreviewStatusText(status);
+  if (adminCodeEl) {
+    adminCodeEl.style.display = site.adminCode ? 'block' : 'none';
+    adminCodeEl.textContent = site.adminCode ? `관리자 코드 : ${site.adminCode}` : '';
+  }
   linkInput.value = entryUrl;
   qrWrap.innerHTML = '';
   new QRCode(qrWrap, {
@@ -562,10 +568,13 @@ function showWeddingPhotoScreen() {
     return;
   }
 
-  photos.forEach(src => {
+  photos.forEach((src, index) => {
     const img = document.createElement('img');
     img.src = src;
-    img.style.cssText = 'width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid var(--border);';
+    img.alt = `웨딩 사진 ${index + 1}`;
+    img.loading = 'lazy';
+    img.style.cssText = 'width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid var(--border); cursor:zoom-in;';
+    img.addEventListener('click', () => openPhotoViewer(src));
     grid.appendChild(img);
   });
   document.getElementById('wedding-photo-modal').style.display = 'flex';
@@ -717,19 +726,37 @@ function opStatusLabel(status) {
   return '지난';
 }
 
+function renderStatusTicker({ api = 'CHECKING', db = 'CHECKING', upload = 'CHECKING', sites = '-', photos = '-', guests = '-', state = 'pending' } = {}) {
+  const tickerInner = document.getElementById('status-ticker-inner');
+  if (!tickerInner) return;
+
+  const emoji = state === 'ok' ? '🟢' : (state === 'error' ? '🔴' : '🟡');
+  const baseMarkup = `
+    <span class="ticker-item">${emoji} Spring Boot API — <span id="op-system-api">${api}</span></span>
+    <span class="ticker-sep">◆</span>
+    <span class="ticker-item">${emoji} MySQL Database — <span id="op-system-db">${db}</span></span>
+    <span class="ticker-sep">◆</span>
+    <span class="ticker-item">${emoji} Upload Directory — <span id="op-system-dashboard">${upload}</span></span>
+    <span class="ticker-sep">◆</span>
+    <span class="ticker-item ticker-summary-item" id="ticker-summary">총 사이트 <span class="ts-sites" id="op-stat-total-sites-t">${sites}</span>건 · 사진 <span class="ts-photos" id="op-stat-total-photos-t">${photos}</span>장 · 하객 <span class="ts-guests" id="op-stat-total-guests-t">${guests}</span>명</span>
+    <span class="ticker-sep">◆</span>
+  `;
+
+  tickerInner.innerHTML = baseMarkup + baseMarkup;
+  const allChildren = Array.from(tickerInner.children);
+  const originalChildCount = allChildren.length / 2;
+  for (let i = originalChildCount; i < allChildren.length; i++) {
+    if (allChildren[i].id) allChildren[i].removeAttribute('id');
+    allChildren[i].querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+  }
+}
+
 async function renderOperatorDashboard() {
   const totalSitesEl  = document.getElementById('op-stat-total-sites');
   const futureSitesEl = document.getElementById('op-stat-future-sites');
   const totalPhotosEl = document.getElementById('op-stat-total-photos');
   const totalGuestsEl = document.getElementById('op-stat-total-guests');
   const recentBodyEl  = document.getElementById('op-recent-events-body');
-  const systemApiEl   = document.getElementById('op-system-api');
-  const systemDbEl    = document.getElementById('op-system-db');
-  const systemDashEl  = document.getElementById('op-system-dashboard');
-  // 티커용 span
-  const tickerSitesEl  = document.getElementById('op-stat-total-sites-t');
-  const tickerPhotosEl = document.getElementById('op-stat-total-photos-t');
-  const tickerGuestsEl = document.getElementById('op-stat-total-guests-t');
 
   if (!totalSitesEl || !recentBodyEl) return;
 
@@ -765,19 +792,14 @@ async function renderOperatorDashboard() {
     totalPhotosEl.textContent = String(totalPhotos);
     totalGuestsEl.textContent = String(totalGuests);
 
-    // 티커 업데이트 — 원본 + 복제본 모두 갱신 (class 셀렉터로)
-    document.querySelectorAll('.ts-sites').forEach(el => { el.textContent = normalized.length; });
-    document.querySelectorAll('.ts-photos').forEach(el => { el.textContent = totalPhotos; });
-    document.querySelectorAll('.ts-guests').forEach(el => { el.textContent = totalGuests; });
-
-    // 시스템 상태 업데이트
-    if (systemApiEl)   { systemApiEl.textContent  = 'ONLINE';    systemApiEl.style.color = '#4CAF50'; }
-    if (systemDbEl)    { systemDbEl.textContent   = 'CONNECTED'; systemDbEl.style.color  = '#4CAF50'; }
-    if (systemDashEl)  { systemDashEl.textContent = normalized.length > 0 ? 'LIVE DATA' : 'READY'; systemDashEl.style.color = '#4CAF50'; }
-
-    // 티커의 이모지도 녹색으로 (innerHTML 사용 → inner span 유지)
-    document.querySelectorAll('.ticker-item').forEach(el => {
-      el.innerHTML = el.innerHTML.replace(/🟡/g, '🟢');
+    renderStatusTicker({
+      api: 'ONLINE',
+      db: 'CONNECTED',
+      upload: normalized.length > 0 ? 'LIVE DATA' : 'READY',
+      sites: normalized.length,
+      photos: totalPhotos,
+      guests: totalGuests,
+      state: 'ok'
     });
 
     if (recentEvents.length === 0) {
@@ -800,9 +822,15 @@ async function renderOperatorDashboard() {
 
   } catch (e) {
     console.error('Failed to render operator dashboard:', e);
-    if (systemApiEl)  { systemApiEl.textContent  = 'ERROR'; systemApiEl.style.color  = '#b05a5a'; }
-    if (systemDbEl)   { systemDbEl.textContent   = 'ERROR'; systemDbEl.style.color   = '#b05a5a'; }
-    if (systemDashEl) { systemDashEl.textContent = 'ERROR'; systemDashEl.style.color = '#b05a5a'; }
+    renderStatusTicker({
+      api: 'ERROR',
+      db: 'ERROR',
+      upload: 'ERROR',
+      sites: '-',
+      photos: '-',
+      guests: '-',
+      state: 'error'
+    });
     recentBodyEl.innerHTML = '<tr><td colspan="4" style="padding:18px 0; color:#b05a5a;">이벤트 데이터를 불러오지 못했어요</td></tr>';
     renderMonthlyChart([]);
   }
@@ -892,20 +920,6 @@ function renderMonthlyChart(events) {
     '</svg>';
 }
 
-const DEFAULT_TIMETABLE_ITEMS = [
-  { time: '13:30', title: '하객 입장 시작', desc: '사진 업로드와 방명 메시지를 천천히 남겨주세요.' },
-  { time: '14:00', title: '예식 시작', desc: '예식 진행 중에는 촬영 동선을 배려해 주세요.' },
-  { time: '14:40', title: '단체 사진', desc: '안내에 따라 양가 가족 및 지인 촬영이 진행돼요.' },
-  { time: '15:00', title: '식사 및 자유 촬영', desc: '갤러리에 오늘의 순간을 계속 올릴 수 있어요.' }
-];
-
-const DEFAULT_FAQ_ITEMS = [
-  { q: '사진은 몇 장까지 올릴 수 있나요?', a: '한 번에 최대 5장까지 업로드할 수 있어요.' },
-  { q: '이름이나 관계를 잘못 입력했어요.', a: '메뉴의 하객 정보 변경에서 다시 입장 정보를 바꿀 수 있어요.' },
-  { q: '내가 올린 글은 어떻게 지우나요?', a: '같은 기기에서 입장한 본인 글은 갤러리에서 바로 삭제할 수 있어요.' },
-  { q: '사진이 바로 안 보이면 어떻게 하나요?', a: '갤러리에서 새로고침 버튼을 눌러 최신 업로드를 다시 불러와 주세요.' }
-];
-
 function getCurrentCoupleLabel() {
   const groom = document.getElementById('groom-name')?.textContent?.trim() || '신랑';
   const bride = document.getElementById('bride-name')?.textContent?.trim() || '신부';
@@ -917,16 +931,29 @@ function openTimelineModal() {
   const title = document.getElementById('timeline-menu-title');
   if (!body || !title) return;
 
+  const guestTimelineItems = typeof getTimelineItemsForGuest === 'function'
+    ? getTimelineItemsForGuest()
+    : [];
+
   title.textContent = `${getCurrentCoupleLabel()} 예식 타임테이블`;
-  body.innerHTML = DEFAULT_TIMETABLE_ITEMS.map(item => `
-    <div style="display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border);">
-      <div style="min-width:56px; font-size:15px; font-weight:700; color:var(--deep-rose);">${item.time}</div>
-      <div>
-        <div style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;">${item.title}</div>
-        <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">${item.desc}</div>
+
+  if (!guestTimelineItems.length) {
+    body.innerHTML = `
+      <div class="timeline-empty-msg">
+        아직 공개된 타임테이블이 없어요.<br>
+        운영자가 예식 순서를 준비 중입니다.
+      </div>`;
+  } else {
+    body.innerHTML = `<div class="timeline-guest-list">${guestTimelineItems.map(item => `
+      <div class="timeline-guest-item">
+        <div class="timeline-guest-time">${safeTxt(item.time || '안내')}</div>
+        <div>
+          <div class="timeline-guest-title">${safeTxt(item.title || '안내')}</div>
+          <div class="timeline-guest-desc">${safeTxt(item.desc || '')}</div>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `).join('')}</div>`;
+  }
 
   closeMenu();
   document.getElementById('timeline-menu-modal').style.display = 'flex';
@@ -969,20 +996,7 @@ async function initApp() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'entry') return;
 
-  // 티커 무한 스크롤을 위해 내용 복제 (한 번만 수행)
-  const tickerInner = document.getElementById('status-ticker-inner');
-  if (tickerInner && !tickerInner.dataset.clonedOnce) {
-    const originalMarkup = tickerInner.innerHTML;
-    tickerInner.innerHTML = originalMarkup + originalMarkup;
-    tickerInner.dataset.clonedOnce = 'true';
-
-    const allChildren = Array.from(tickerInner.children);
-    const originalChildCount = allChildren.length / 2;
-    for (let i = originalChildCount; i < allChildren.length; i++) {
-      if (allChildren[i].id) allChildren[i].removeAttribute('id');
-      allChildren[i].querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-    }
-  }
+  renderStatusTicker();
 
   const operatorScreen = document.getElementById('screen-operator');
   if (operatorScreen && operatorScreen.classList.contains('active')) {

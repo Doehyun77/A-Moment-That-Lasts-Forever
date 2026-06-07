@@ -4,6 +4,26 @@
 
 let faqItems = []; // [{ q: string, a: string }]
 
+function normalizeFaqItemsForClient(items = []) {
+    if (!Array.isArray(items)) return [];
+    return items
+        .map((item) => ({
+            q: String(item?.q || '').trim().slice(0, 50),
+            a: String(item?.a || '').trim().slice(0, 150)
+        }))
+        .filter((item) => item.q)
+        .slice(0, 5);
+}
+
+function setFaqItems(items = []) {
+    faqItems = normalizeFaqItemsForClient(items);
+    renderFaqEditList();
+}
+
+function getFaqItemsForSubmit() {
+    return normalizeFaqItemsForClient(faqItems);
+}
+
 // ── 관리자: FAQ 편집 ──────────────────────────────
 
 function addFaqItem() {
@@ -22,6 +42,7 @@ function removeFaqItem(idx) {
 
 function syncFaqItem(idx, field, value) {
     if (faqItems[idx]) faqItems[idx][field] = value;
+    refreshCreateWorkspace();
 }
 
 function renderFaqEditList() {
